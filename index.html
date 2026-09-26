@@ -297,6 +297,12 @@ body.view-only .admin-only-nav { display: none !important; }
 body.view-only .nav-item.admin-only-nav.dept-unlocked { display: flex !important; }
 body.view-only .sidebar-section-label.admin-only-nav.dept-unlocked { display: block !important; }
 
+/* ── โหมดดูรายงานยอดผลิตเฉพาะแผนก (เข้าผ่านรหัสแผนก) — ไม่ต้องโชว์เมนูหลัก/รายงานอื่น ── */
+body.dept-view-mode #main-menu-section,
+body.dept-view-mode #reports-section { display: none !important; }
+/* ปุ่มออกจากรายงานยอดผลิต — โชว์เฉพาะตอนอยู่ในโหมดนี้ */
+body.dept-view-mode #exit-dept-view-btn { display: flex !important; }
+
 /* ── View-only overlay on inputs ── */
 body.view-only input:not(#date-input):not(#auth-pw):not(#dept-auth-pw):not(#month-input):not(#week-input),
 body.view-only textarea,
@@ -1241,6 +1247,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
 
 <!-- ══ SIDEBAR ══ -->
 <nav class="sidebar" id="sidebar">
+  <div id="main-menu-section">
   <div class="sidebar-section-label">เมนูหลัก</div>
   <button class="nav-item active" onclick="goPage('monthly',this);buildMonthly()">
     <span class="nav-icon">📅</span> ภาพรวมรายเดือน
@@ -1256,6 +1263,11 @@ html, body { max-width: 100%; overflow-x: hidden; }
   </button>
   <button class="nav-item" onclick="openProdMenu()">
     <span class="nav-icon">🏭</span> รายงานยอดผลิต
+  </button>
+  </div>
+
+  <button class="nav-item" id="exit-dept-view-btn" onclick="exitDeptView()" style="display:none;">
+    <span class="nav-icon">🚪</span> ออกจากรายงานยอดผลิต
   </button>
 
   <div class="sidebar-section-label admin-only-nav" id="prod-section-label" style="margin-top:8px;">การผลิต</div>
@@ -1296,6 +1308,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
     <span class="nav-badge">OC 6</span>
   </button>
 
+  <div id="reports-section">
   <div class="sidebar-section-label" style="margin-top:8px;">รายงาน</div>
   <button class="nav-item" onclick="window.open('https://script.google.com/macros/s/AKfycbySOkYaZMZ2Y1gYuOPjZZ_BVbpmuq9lqO3B_Su7d-k9_0J0lI99-RjqDDRVZFFe1joW/exec','_blank')">
     <span class="nav-icon">🪵</span> LumberTrack Pro <span style="margin-left:auto;font-size:10px;color:var(--g300);">↗</span>
@@ -1303,6 +1316,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   <button class="nav-item" onclick="window.open('https://script.google.com/macros/s/AKfycbx9vozq0dfWaDNsGHNlFzHWVWpzD1Ak5sPhvsPjFHT9xplN4hsdvh3c7Q3x5jb2fEoa/exec','_blank')">
     <span class="nav-icon">📝</span> Customer Complaint Form (CCF) <span style="margin-left:auto;font-size:10px;color:var(--g300);">↗</span>
   </button>
+  </div>
 
   <div class="sidebar-section-label admin-only-nav" style="margin-top:8px;">อื่น ๆ</div>
   <button class="nav-item admin-only-nav" onclick="window.open('https://claude.ai/artifact/E5W2AWa2Pe2DtJtaJDngzf','_blank')">
@@ -4690,21 +4704,19 @@ const DEPT_LIST = [
   { id: 'pallet',    icon: '📦', name: 'พาเลท',              oc: 6,  code: '1008' },
   { id: 'warehouse', icon: '🏬', name: 'คลังสินค้า',          oc: 6,  code: '1009' },
 ];
-const DEPT_UNLOCK_KEY = 'door_unlocked_depts';
-let unlockedDepts = new Set();
-try { unlockedDepts = new Set(JSON.parse(sessionStorage.getItem(DEPT_UNLOCK_KEY) || '[]')); } catch (e) {}
+// เข้าดูได้ทีละแผนกเท่านั้นต่อรหัสที่ใส่ — พอใส่รหัสแผนกใหม่ จะเห็นเฉพาะแผนกนั้น
+// แผนกก่อนหน้าจะถูกซ่อน/ล็อกกลับทันที (ต้องใส่รหัสใหม่ถ้าจะย้อนกลับไปดูอีก)
+const DEPT_UNLOCK_KEY = 'door_current_dept';
+let currentDept = sessionStorage.getItem(DEPT_UNLOCK_KEY) || null;
 let pendingDeptId = null;
 
-function saveUnlockedDepts() {
-  sessionStorage.setItem(DEPT_UNLOCK_KEY, JSON.stringify([...unlockedDepts]));
-}
-
-// แสดงปุ่มเมนูของแผนกที่ปลดล็อกแล้วในไซด์บาร์ แม้จะอยู่ในโหมดดูอย่างเดียว
+// แสดงเฉพาะปุ่มเมนูของแผนกที่กำลังดูอยู่ในไซด์บาร์ (ซ่อนแผนกอื่นที่เคยปลดล็อกไว้ก่อนหน้า)
 function markDeptUnlockedUI(id) {
-  unlockedDepts.add(id);
-  saveUnlockedDepts();
-  const navBtn = document.querySelector('.nav-item[data-dept="' + id + '"]');
-  if (navBtn) navBtn.classList.add('dept-unlocked');
+  currentDept = id;
+  sessionStorage.setItem(DEPT_UNLOCK_KEY, id);
+  document.querySelectorAll('.nav-item[data-dept]').forEach(btn => {
+    btn.classList.toggle('dept-unlocked', btn.getAttribute('data-dept') === id);
+  });
   const label = document.getElementById('prod-section-label');
   if (label) label.classList.add('dept-unlocked');
 }
@@ -4714,7 +4726,7 @@ function buildProdMenu() {
   const wrap = document.getElementById('prod-menu-list');
   if (!wrap) return;
   wrap.innerHTML = DEPT_LIST.map(d => {
-    const unlocked = isAdmin || unlockedDepts.has(d.id);
+    const unlocked = isAdmin || currentDept === d.id;
     const badge = unlocked
       ? '<span class="prod-menu-item-badge">✓ ปลดล็อกแล้ว</span>'
       : '<span class="prod-menu-item-badge locked">🔒 ต้องใส่รหัส</span>';
@@ -4743,11 +4755,22 @@ function enterDept(id) {
   if (w) w.classList.add('hide');
   const navBtn = document.querySelector('.nav-item[data-dept="' + id + '"]');
   goPage(id, navBtn);
+  // เข้าผ่านรหัสแผนก (ไม่ใช่แอดมิน) ให้ซ่อนเมนูหลัก/รายงานอื่น เหลือแค่รายงานแผนกนี้
+  if (!isAdmin) document.body.classList.add('dept-view-mode');
+}
+
+// ออกจากโหมดดูรายงานยอดผลิตเฉพาะแผนก กลับไปหน้าแรก (Welcome screen)
+// (รหัสแผนกที่เคยปลดล็อกไว้ในเซสชันนี้ยังจำอยู่ ไม่ต้องใส่รหัสซ้ำถ้าจะกลับเข้าไปดูอีก)
+function exitDeptView() {
+  document.body.classList.remove('dept-view-mode');
+  goPage('overview', document.querySelector('.nav-item[onclick*="overview"]'));
+  const w = document.getElementById('welcome-screen');
+  if (w) w.classList.remove('hide');
 }
 
 // กดเลือกแผนกในเมนู — ถ้าปลดล็อกแล้ว/เป็นแอดมิน เข้าดูได้เลย ไม่งั้นถามรหัสก่อน
 function openDeptOrPrompt(id) {
-  if (isAdmin || unlockedDepts.has(id)) {
+  if (isAdmin || currentDept === id) {
     enterDept(id);
     return;
   }
@@ -4796,6 +4819,7 @@ function applyMode() {
   const shareBtn = document.getElementById('share-guide-btn');
   if (isAdmin) {
     document.body.classList.remove('view-only');
+    document.body.classList.remove('dept-view-mode'); // แอดมินเห็นเมนูทั้งหมดเสมอ
     btn.textContent = '🔓 Admin';
     btn.classList.add('admin-mode');
     if (outBtn) outBtn.style.display = '';
@@ -4810,7 +4834,7 @@ function applyMode() {
     // (ยกเว้นแผนกที่ปลดล็อกด้วยรหัสแผนกไว้แล้ว — แผนกนั้นดูต่อได้)
     const adminPages = ['saw1','saw2','dry','blade8','frame','press','cts','pallet','warehouse','manpower'];
     const activePage = document.querySelector('.page.active');
-    if (activePage && adminPages.some(p => activePage.id === 'page-' + p) && !unlockedDepts.has(activePage.id.replace('page-', ''))) {
+    if (activePage && adminPages.some(p => activePage.id === 'page-' + p) && activePage.id.replace('page-', '') !== currentDept) {
       goPage('overview', document.querySelector('.nav-item:first-child'));
     }
   }
@@ -4865,12 +4889,10 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
   isAdmin = true;
 }
 
-// Restore nav visibility for departments unlocked earlier this session
-unlockedDepts.forEach(id => {
-  const navBtn = document.querySelector('.nav-item[data-dept="' + id + '"]');
+// Restore nav visibility for the department unlocked earlier this session (only one)
+if (currentDept) {
+  const navBtn = document.querySelector('.nav-item[data-dept="' + currentDept + '"]');
   if (navBtn) navBtn.classList.add('dept-unlocked');
-});
-if (unlockedDepts.size > 0) {
   const label = document.getElementById('prod-section-label');
   if (label) label.classList.add('dept-unlocked');
 }
