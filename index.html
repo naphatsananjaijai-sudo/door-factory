@@ -3520,7 +3520,10 @@ function calcSawMonthlyAvg() {
 }
 
 async function loadData() {
-  FIELDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  // หมายเหตุ: ไม่ล้างค่าช่องกรอกทันทีตรงนี้ (ต่างจากโค้ดเดิม) — เพราะระหว่างที่รอข้อมูลจากเซิร์ฟเวอร์
+  // (มีช่วง await) หน้าจอจะโล่งว่างเปล่าไปชั่วขณะ ทำให้ตัวเลขดู "มาๆ หายๆ" โดยเฉพาะตอนที่ระบบ
+  // auto-refresh ทำงานอยู่เบื้องหลังทุก 20 วินาที จึงย้ายการตั้งค่า/ล้างช่องไปทำครั้งเดียวรวดเดียว
+  // ท้ายฟังก์ชัน หลังจากรู้ค่าสุดท้ายแล้ว
   let data = null;
   if (GAS_READY) {
     try {
@@ -3544,8 +3547,9 @@ async function loadData() {
     const raw = localStorage.getItem('door_' + currentIso);
     if (raw) data = JSON.parse(raw);
   }
+  // ตั้งค่าทุกช่องรวดเดียวตรงนี้ (ไม่มี await คั่นกลาง) เพื่อไม่ให้เกิดช่วงที่หน้าจอว่างเปล่าให้เห็น
+  FIELDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = (data && data[id] !== undefined) ? data[id] : ''; });
   if (data) {
-    FIELDS.forEach(id => { const el = document.getElementById(id); if (el && data[id] !== undefined) el.value = data[id]; });
     FMT_FIELDS.forEach(id => numFmt(document.getElementById(id)));
   }
   // Re-trigger all computed fields
@@ -3593,7 +3597,7 @@ function startAutoRefresh() {
    วางลิ้งค์ Web App URL ที่นี่
    ดูวิธีตั้งค่าในหน้า "วิธีแชร์แดชบอร์ด"
 ══════════════════════════════════════════════════ */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbykM-xOFz6hOXQZtv6H7RyDDwsd3YPBOXHEdwR9NReCjE-mY5S_I7_dySf5pwK_cr77nA/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz1d9vEblI66Ojxs_eR8wWUEP-6I9EC_d1bvfvKCrLvrvxmYQi81Oltg5MrnateFb7jxQ/exec';
 const GAS_READY = GAS_URL !== 'YOUR_GAS_URL';
 
 // ── ตั้งวันที่ปัจจุบันเป็นวันล่าสุดที่มีข้อมูลจริง (เรียกใช้หลัง seed/โหลดข้อมูลแล้ว) ──
