@@ -249,32 +249,34 @@ body {
 .logout-btn:hover { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
 
 /* ── Auth Modal ── */
-#auth-overlay {
+#auth-overlay, #dept-auth-overlay {
   display: none; position: fixed; inset: 0; z-index: 10000;
   background: rgba(15,23,42,.55); backdrop-filter: blur(6px);
   align-items: center; justify-content: center;
 }
-#auth-overlay.open { display: flex; }
-#auth-box {
+#auth-overlay.open, #dept-auth-overlay.open { display: flex; }
+#auth-box, #dept-auth-box {
   background: #fff; border: 1px solid #e2e8f0;
   border-radius: var(--radius); padding: 32px 36px; min-width: 320px;
   box-shadow: 0 24px 60px rgba(15,23,42,.2); text-align: center;
 }
-#auth-box h2 { color: var(--g800); font-size: 18px; font-weight: 800; margin-bottom: 6px; }
-#auth-box p { color: #64748b; font-size: 13px; margin-bottom: 22px; }
-#auth-pw {
+#auth-box h2, #dept-auth-box h2 { color: var(--g800); font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+#auth-box p, #dept-auth-box p { color: #64748b; font-size: 13px; margin-bottom: 22px; }
+#auth-pw, #dept-auth-pw {
   width: 100%; padding: 10px 14px; border-radius: var(--radius-xs);
   border: 1.5px solid #cbd5e1; background: #f8fafc;
   color: var(--g800); font-size: 15px; font-family: inherit; outline: none;
   text-align: center; letter-spacing: 2px; margin-bottom: 8px;
   transition: border .15s, box-shadow .15s;
 }
-#auth-pw:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(14,165,233,.12); }
-#auth-pw.shake { animation: shake .35s; border-color: var(--red-500); }
+#auth-pw:focus, #dept-auth-pw:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(14,165,233,.12); }
+#auth-pw.shake, #dept-auth-pw.shake { animation: shake .35s; border-color: var(--red-500); }
 @keyframes shake {
   0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 60%{transform:translateX(6px)}
 }
-#auth-err { color: var(--red-600); font-size: 12px; min-height: 18px; margin-bottom: 14px; }
+#auth-err, #dept-auth-err { color: var(--red-600); font-size: 12px; min-height: 18px; margin-bottom: 14px; }
+/* ต้องลอยอยู่เหนือหน้า "รายงานยอดผลิต" (z-index 99998) เพราะเปิดขึ้นซ้อนกันได้ */
+#dept-auth-overlay { z-index: 100000; }
 .auth-submit {
   width: 100%; padding: 11px; background: linear-gradient(135deg, var(--brand), var(--brand-dark));
   color: #fff; border: none; border-radius: var(--radius-xs); font-size: 15px;
@@ -291,9 +293,12 @@ body {
 
 /* ── Hide admin-only nav in view-only mode ── */
 body.view-only .admin-only-nav { display: none !important; }
+/* ── แต่ถ้าแผนกนั้นถูกปลดล็อกด้วยรหัสผ่านแผนก (dept code) ให้โชว์กลับมา แม้อยู่ในโหมดดูอย่างเดียว ── */
+body.view-only .nav-item.admin-only-nav.dept-unlocked { display: flex !important; }
+body.view-only .sidebar-section-label.admin-only-nav.dept-unlocked { display: block !important; }
 
 /* ── View-only overlay on inputs ── */
-body.view-only input:not(#date-input):not(#auth-pw):not(#month-input):not(#week-input),
+body.view-only input:not(#date-input):not(#auth-pw):not(#dept-auth-pw):not(#month-input):not(#week-input),
 body.view-only textarea,
 body.view-only select:not(#mc-ma-m):not(#mc-ma-y):not(#mc-mb-m):not(#mc-mb-y) {
   pointer-events: none; opacity: .65;
@@ -990,10 +995,10 @@ html, body { max-width: 100%; overflow-x: hidden; }
   }
 
   /* Auth modal */
-  #auth-box { padding: 24px 20px; min-width: 280px; margin: 0 16px; }
+  #auth-box, #dept-auth-box { padding: 24px 20px; min-width: 280px; margin: 0 16px; }
 
   /* Input fields in pages */
-  input[type=number], input[type=text]:not(#date-input):not(#auth-pw):not(#month-input):not(#week-input) {
+  input[type=number], input[type=text]:not(#date-input):not(#auth-pw):not(#dept-auth-pw):not(#month-input):not(#week-input) {
     font-size: 16px; /* prevent iOS zoom */
   }
 }
@@ -1078,7 +1083,59 @@ html, body { max-width: 100%; overflow-x: hidden; }
 }
 .welcome-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(27,94,32,.4), inset 0 1px 0 rgba(255,255,255,.35); }
 .welcome-btn:active { transform: translateY(0) scale(.96); }
+.welcome-btn-secondary {
+  margin-top: 12px;
+  background: rgba(255,255,255,.55);
+  color: #1b5e20;
+  border: 1.5px solid rgba(27,94,32,.35);
+  box-shadow: 0 4px 14px rgba(20,60,30,.10);
+}
+.welcome-btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,60,30,.16); background: rgba(255,255,255,.75); }
 .welcome-foot { margin-top: 20px; font-size: 11px; color: #4a6b52; opacity: .65; letter-spacing: .3px; }
+
+/* ── หน้ารายการแผนกผลิต (เลือกแผนกที่จะดู + ใส่รหัสผ่านแผนก) ── */
+#prod-menu-screen {
+  position: fixed; inset: 0; z-index: 99998;
+  display: flex; align-items: center; justify-content: center;
+  overflow: auto; padding: 24px;
+  background: linear-gradient(160deg, #dff3e4 0%, #bfe6d2 32%, #9fd8d8 62%, #bcd7f2 100%);
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .3s ease, visibility 0s linear .3s;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Sarabun', 'Segoe UI', sans-serif;
+}
+#prod-menu-screen.open { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .3s ease, visibility 0s linear 0s; }
+.prod-menu-box {
+  position: relative; max-width: 460px; width: 100%; margin: auto;
+  padding: 32px 26px 26px; border-radius: 30px;
+  background: rgba(255,255,255,.5);
+  backdrop-filter: blur(34px) saturate(180%);
+  -webkit-backdrop-filter: blur(34px) saturate(180%);
+  border: 1px solid rgba(255,255,255,.6);
+  box-shadow: 0 8px 32px rgba(20,60,30,.18), inset 0 1px 0 rgba(255,255,255,.8);
+  animation: welcomeIn .5s cubic-bezier(.22,1,.36,1);
+}
+.prod-menu-title { font-size: 20px; font-weight: 800; color: #0f2e16; margin-bottom: 4px; text-align: center; }
+.prod-menu-sub { font-size: 13px; color: #3a5a42; opacity: .8; margin-bottom: 20px; text-align: center; }
+.prod-menu-list { display: flex; flex-direction: column; gap: 10px; }
+.prod-menu-item {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  background: rgba(255,255,255,.7); border: 1px solid rgba(27,94,32,.12);
+  border-radius: 16px; padding: 13px 16px; cursor: pointer;
+  font-family: inherit; text-align: left; transition: transform .15s, background .15s;
+}
+.prod-menu-item:hover { transform: translateY(-1px); background: rgba(255,255,255,.92); }
+.prod-menu-item-icon { font-size: 22px; width: 30px; text-align: center; flex-shrink: 0; }
+.prod-menu-item-name { flex: 1; font-size: 14px; font-weight: 700; color: #14321a; }
+.prod-menu-item-badge {
+  font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+  background: #ecfdf5; color: #16a34a; flex-shrink: 0;
+}
+.prod-menu-item-badge.locked { background: #f1f5f9; color: #64748b; }
+.prod-menu-close {
+  display: block; margin: 20px auto 0; background: none; border: none;
+  color: #3a5a42; font-size: 13px; font-weight: 700; cursor: pointer;
+  text-decoration: underline; font-family: inherit;
+}
 @media (max-width: 480px) {
   .welcome-box { padding: 36px 24px 28px; border-radius: 30px; }
   .welcome-icon { width: 78px; height: 78px; font-size: 40px; border-radius: 20px; }
@@ -1098,7 +1155,18 @@ html, body { max-width: 100%; overflow-x: hidden; }
     <div class="welcome-title">โรงงานประตู<span>DOOR FACTORY</span></div>
     <div class="welcome-desc">ระบบติดตามผลผลิตและรายงานประจำวัน<br>ทุกแผนกในที่เดียว</div>
     <button type="button" class="welcome-btn" onclick="enterDashboard()">📊 เข้าดูรายงาน</button>
+    <button type="button" class="welcome-btn welcome-btn-secondary" onclick="openProdMenu()">🏭 รายงานยอดผลิต</button>
     <div class="welcome-foot">คลิกปุ่มด้านบนเพื่อเข้าสู่แดชบอร์ด</div>
+  </div>
+</div>
+
+<!-- ══ หน้าเลือกแผนกผลิต (แต่ละแผนกมีรหัสผ่านของตัวเอง) ══ -->
+<div id="prod-menu-screen">
+  <div class="prod-menu-box">
+    <div class="prod-menu-title">🏭 รายงานยอดผลิต</div>
+    <div class="prod-menu-sub">เลือกแผนกที่ต้องการดู — บางแผนกต้องใส่รหัสผ่านของแผนกนั้นก่อน</div>
+    <div class="prod-menu-list" id="prod-menu-list"></div>
+    <button type="button" class="prod-menu-close" onclick="closeProdMenu()">← กลับหน้าแรก</button>
   </div>
 </div>
 
@@ -1142,6 +1210,19 @@ html, body { max-width: 100%; overflow-x: hidden; }
   </div>
 </div>
 
+<!-- Department (dept) password modal — สำหรับปลดล็อกดูรายงานยอดผลิตรายแผนก -->
+<div id="dept-auth-overlay">
+  <div id="dept-auth-box">
+    <h2 id="dept-auth-title">🔐 กรอกรหัสแผนก</h2>
+    <p>กรอกรหัสผ่านของแผนกนี้เพื่อเข้าดูรายงาน</p>
+    <input type="password" id="dept-auth-pw" placeholder="รหัสผ่านแผนก" maxlength="50"
+      onkeydown="if(event.key==='Enter')deptAuthSubmit()" oninput="document.getElementById('dept-auth-err').textContent=''">
+    <div id="dept-auth-err"></div>
+    <button class="auth-submit" onclick="deptAuthSubmit()">เข้าดูรายงาน</button>
+    <button class="auth-cancel" onclick="deptAuthCloseModal()">ยกเลิก</button>
+  </div>
+</div>
+
 <!-- Calendar popup -->
 <div id="cal-popup">
   <div class="cal-nav">
@@ -1173,41 +1254,44 @@ html, body { max-width: 100%; overflow-x: hidden; }
   <button class="nav-item" onclick="goPage('overview',this)">
     <span class="nav-icon">📆</span> ภาพรวมรายวัน
   </button>
+  <button class="nav-item" onclick="openProdMenu()">
+    <span class="nav-icon">🏭</span> รายงานยอดผลิต
+  </button>
 
-  <div class="sidebar-section-label admin-only-nav" style="margin-top:8px;">การผลิต</div>
-  <button class="nav-item admin-only-nav" onclick="goPage('saw1',this)">
+  <div class="sidebar-section-label admin-only-nav" id="prod-section-label" style="margin-top:8px;">การผลิต</div>
+  <button class="nav-item admin-only-nav" data-dept="saw1" onclick="goPage('saw1',this)">
     <span class="nav-icon">🪵</span> โรงเลื่อยไทรน้อย
     <span class="nav-badge">OC 46</span>
   </button>
-  <button class="nav-item admin-only-nav" onclick="goPage('saw2',this)">
+  <button class="nav-item admin-only-nav" data-dept="saw2" onclick="goPage('saw2',this)">
     <span class="nav-icon">🪵</span> โรงเลื่อยปราจีน
     <span class="nav-badge">OC 17</span>
   </button>
-  <button class="nav-item admin-only-nav" onclick="goPage('dry',this)">
+  <button class="nav-item admin-only-nav" data-dept="dry" onclick="goPage('dry',this)">
     <span class="nav-icon">🌡️</span> โรงอบ
     <span class="nav-badge">OC 5</span>
   </button>
-  <button class="nav-item admin-only-nav" onclick="goPage('blade8',this)">
+  <button class="nav-item admin-only-nav" data-dept="blade8" onclick="goPage('blade8',this)">
     <span class="nav-icon">⚙️</span> โรง 8 ใบ
     <span class="nav-badge">OC 30</span>
   </button>
-  <button class="nav-item admin-only-nav" onclick="goPage('frame',this)">
+  <button class="nav-item admin-only-nav" data-dept="frame" onclick="goPage('frame',this)">
     <span class="nav-icon">🔨</span> ยิงโครง
     <span class="nav-badge">OC 30</span>
   </button>
-  <button class="nav-item admin-only-nav" onclick="goPage('press',this)">
+  <button class="nav-item admin-only-nav" data-dept="press" onclick="goPage('press',this)">
     <span class="nav-icon">🔥</span> อัดร้อน/อัดเย็น
     <span class="nav-badge">OC 14</span>
   </button>
-  <button class="nav-item admin-only-nav" onclick="goPage('cts',this)">
+  <button class="nav-item admin-only-nav" data-dept="cts" onclick="goPage('cts',this)">
     <span class="nav-icon">✂️</span> CTS &amp; คัดเกรด
     <span class="nav-badge">OC 25</span>
   </button>
-  <button class="nav-item admin-only-nav" onclick="goPage('pallet',this)">
+  <button class="nav-item admin-only-nav" data-dept="pallet" onclick="goPage('pallet',this)">
     <span class="nav-icon">📦</span> พาเลท
     <span class="nav-badge">OC 6</span>
   </button>
-  <button class="nav-item admin-only-nav" onclick="goPage('warehouse',this)">
+  <button class="nav-item admin-only-nav" data-dept="warehouse" onclick="goPage('warehouse',this)">
     <span class="nav-icon">🏬</span> คลังสินค้า
     <span class="nav-badge">OC 6</span>
   </button>
@@ -4587,6 +4671,125 @@ const SESSION_KEY = 'door_admin_session';
 
 let isAdmin = false;
 
+/* ══════════════════════════════════════════════════
+   รหัสผ่านรายแผนก (สำหรับปุ่ม "🏭 รายงานยอดผลิต")
+   แต่ละแผนกมีรหัสของตัวเอง — ใครมีรหัสแผนกไหน ก็เข้าดู "อย่างเดียว"
+   (ดูได้ แก้ไข/บันทึกไม่ได้ เหมือนโหมดดูอย่างเดียวปกติ) เฉพาะแผนกนั้นได้
+
+   วิธีเปลี่ยนรหัสภายหลัง: แก้ค่า code: '....' ของแผนกที่ต้องการด้านล่างนี้
+   ได้เลย (เป็นข้อความธรรมดา ไม่ต้องเข้ารหัสอะไร) แล้วอัปโหลดไฟล์ทับของเดิม
+══════════════════════════════════════════════════ */
+const DEPT_LIST = [
+  { id: 'saw1',      icon: '🪵', name: 'โรงเลื่อยไทรน้อย',   oc: 46, code: '1001' },
+  { id: 'saw2',      icon: '🪵', name: 'โรงเลื่อยปราจีน',    oc: 17, code: '1002' },
+  { id: 'dry',       icon: '🌡️', name: 'โรงอบ',              oc: 5,  code: '1003' },
+  { id: 'blade8',    icon: '⚙️', name: 'โรง 8 ใบ',           oc: 30, code: '1004' },
+  { id: 'frame',     icon: '🔨', name: 'ยิงโครง',            oc: 30, code: '1005' },
+  { id: 'press',     icon: '🔥', name: 'อัดร้อน/อัดเย็น',     oc: 14, code: '1006' },
+  { id: 'cts',       icon: '✂️', name: 'CTS & คัดเกรด',       oc: 25, code: '1007' },
+  { id: 'pallet',    icon: '📦', name: 'พาเลท',              oc: 6,  code: '1008' },
+  { id: 'warehouse', icon: '🏬', name: 'คลังสินค้า',          oc: 6,  code: '1009' },
+];
+const DEPT_UNLOCK_KEY = 'door_unlocked_depts';
+let unlockedDepts = new Set();
+try { unlockedDepts = new Set(JSON.parse(sessionStorage.getItem(DEPT_UNLOCK_KEY) || '[]')); } catch (e) {}
+let pendingDeptId = null;
+
+function saveUnlockedDepts() {
+  sessionStorage.setItem(DEPT_UNLOCK_KEY, JSON.stringify([...unlockedDepts]));
+}
+
+// แสดงปุ่มเมนูของแผนกที่ปลดล็อกแล้วในไซด์บาร์ แม้จะอยู่ในโหมดดูอย่างเดียว
+function markDeptUnlockedUI(id) {
+  unlockedDepts.add(id);
+  saveUnlockedDepts();
+  const navBtn = document.querySelector('.nav-item[data-dept="' + id + '"]');
+  if (navBtn) navBtn.classList.add('dept-unlocked');
+  const label = document.getElementById('prod-section-label');
+  if (label) label.classList.add('dept-unlocked');
+}
+
+// สร้างรายการปุ่มแผนกในหน้า "🏭 รายงานยอดผลิต"
+function buildProdMenu() {
+  const wrap = document.getElementById('prod-menu-list');
+  if (!wrap) return;
+  wrap.innerHTML = DEPT_LIST.map(d => {
+    const unlocked = isAdmin || unlockedDepts.has(d.id);
+    const badge = unlocked
+      ? '<span class="prod-menu-item-badge">✓ ปลดล็อกแล้ว</span>'
+      : '<span class="prod-menu-item-badge locked">🔒 ต้องใส่รหัส</span>';
+    return '<button type="button" class="prod-menu-item" onclick="openDeptOrPrompt(\'' + d.id + '\')">' +
+      '<span class="prod-menu-item-icon">' + d.icon + '</span>' +
+      '<span class="prod-menu-item-name">' + d.name + '</span>' +
+      badge +
+      '</button>';
+  }).join('');
+}
+
+function openProdMenu() {
+  const w = document.getElementById('welcome-screen');
+  if (w) w.classList.add('hide');
+  buildProdMenu();
+  document.getElementById('prod-menu-screen').classList.add('open');
+}
+function closeProdMenu() {
+  document.getElementById('prod-menu-screen').classList.remove('open');
+}
+
+// เข้าดูรายงานของแผนกที่ปลดล็อก/เป็นแอดมินอยู่แล้ว
+function enterDept(id) {
+  closeProdMenu();
+  const w = document.getElementById('welcome-screen');
+  if (w) w.classList.add('hide');
+  const navBtn = document.querySelector('.nav-item[data-dept="' + id + '"]');
+  goPage(id, navBtn);
+}
+
+// กดเลือกแผนกในเมนู — ถ้าปลดล็อกแล้ว/เป็นแอดมิน เข้าดูได้เลย ไม่งั้นถามรหัสก่อน
+function openDeptOrPrompt(id) {
+  if (isAdmin || unlockedDepts.has(id)) {
+    enterDept(id);
+    return;
+  }
+  pendingDeptId = id;
+  const dept = DEPT_LIST.find(d => d.id === id);
+  const titleEl = document.getElementById('dept-auth-title');
+  if (titleEl && dept) titleEl.textContent = '🔐 ' + dept.icon + ' ' + dept.name;
+  document.getElementById('dept-auth-overlay').classList.add('open');
+  document.getElementById('dept-auth-pw').value = '';
+  document.getElementById('dept-auth-err').textContent = '';
+  setTimeout(() => document.getElementById('dept-auth-pw').focus(), 80);
+}
+
+function deptAuthCloseModal() {
+  document.getElementById('dept-auth-overlay').classList.remove('open');
+  pendingDeptId = null;
+}
+
+function deptAuthSubmit() {
+  const pw = document.getElementById('dept-auth-pw').value;
+  const dept = DEPT_LIST.find(d => d.id === pendingDeptId);
+  if (dept && pw === dept.code) {
+    markDeptUnlockedUI(dept.id);
+    deptAuthCloseModal();
+    enterDept(dept.id);
+  } else {
+    const pwEl = document.getElementById('dept-auth-pw');
+    document.getElementById('dept-auth-err').textContent = 'รหัสผ่านไม่ถูกต้อง';
+    pwEl.classList.add('shake');
+    pwEl.value = '';
+    setTimeout(() => pwEl.classList.remove('shake'), 400);
+  }
+}
+// Close dept modal on overlay click
+document.getElementById('dept-auth-overlay').addEventListener('click', function(e) {
+  if (e.target === this) deptAuthCloseModal();
+});
+// Close prod menu on background click (not on the box itself)
+document.getElementById('prod-menu-screen').addEventListener('click', function(e) {
+  if (e.target === this) closeProdMenu();
+});
+
 function applyMode() {
   const btn = document.getElementById('auth-btn');
   const outBtn = document.getElementById('logout-btn');
@@ -4604,9 +4807,10 @@ function applyMode() {
     if (outBtn) outBtn.style.display = 'none';
     if (shareBtn) shareBtn.style.display = 'none';
     // Redirect to overview if currently on an admin-only page
+    // (ยกเว้นแผนกที่ปลดล็อกด้วยรหัสแผนกไว้แล้ว — แผนกนั้นดูต่อได้)
     const adminPages = ['saw1','saw2','dry','blade8','frame','press','cts','pallet','warehouse','manpower'];
     const activePage = document.querySelector('.page.active');
-    if (activePage && adminPages.some(p => activePage.id === 'page-' + p)) {
+    if (activePage && adminPages.some(p => activePage.id === 'page-' + p) && !unlockedDepts.has(activePage.id.replace('page-', ''))) {
       goPage('overview', document.querySelector('.nav-item:first-child'));
     }
   }
@@ -4659,6 +4863,16 @@ document.getElementById('auth-overlay').addEventListener('click', function(e) {
 // Restore session if still active
 if (sessionStorage.getItem(SESSION_KEY) === '1') {
   isAdmin = true;
+}
+
+// Restore nav visibility for departments unlocked earlier this session
+unlockedDepts.forEach(id => {
+  const navBtn = document.querySelector('.nav-item[data-dept="' + id + '"]');
+  if (navBtn) navBtn.classList.add('dept-unlocked');
+});
+if (unlockedDepts.size > 0) {
+  const label = document.getElementById('prod-section-label');
+  if (label) label.classList.add('dept-unlocked');
 }
 
 // Apply mode on load
