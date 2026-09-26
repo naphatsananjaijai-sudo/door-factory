@@ -3529,6 +3529,12 @@ async function loadData() {
       if (result.ok && result.data) {
         data = result.data;
         localStorage.setItem('door_' + currentIso, JSON.stringify(data));
+      } else {
+        // เซิร์ฟเวอร์ตอบกลับมาปกติ แต่ยังไม่มีข้อมูลของวันนี้ (เช่น เพิ่งกดบันทึกแล้วรีเฟรชทันที
+        // ก่อนที่การส่งข้อมูลแบบ fire-and-forget จะไปถึงเซิร์ฟเวอร์ทัน) — ใช้ข้อมูลที่แคชไว้ใน
+        // เครื่องนี้แทน ไม่ปล่อยให้ช่องกรอกว่างเปล่าทั้งที่มีข้อมูลอยู่แล้วในเครื่อง
+        const raw = localStorage.getItem('door_' + currentIso);
+        if (raw) data = JSON.parse(raw);
       }
     } catch(e) {
       const raw = localStorage.getItem('door_' + currentIso);
