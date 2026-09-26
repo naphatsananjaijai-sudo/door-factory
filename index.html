@@ -311,6 +311,17 @@ body.view-only select:not(#mc-ma-m):not(#mc-ma-y):not(#mc-mb-m):not(#mc-mb-y) {
   background: #f8fafc !important;
 }
 body.view-only .save-btn { display: none !important; }
+
+/* ── แต่ถ้าเป็นแผนกที่ปลดล็อกด้วยรหัสแผนก (dept code) ให้กรอก/แก้ไข/บันทึกข้อมูลของแผนกนั้นได้ ── */
+body.view-only .page.dept-editable input:not(#date-input):not(#auth-pw):not(#dept-auth-pw):not(#month-input):not(#week-input),
+body.view-only .page.dept-editable textarea,
+body.view-only .page.dept-editable select {
+  pointer-events: auto !important; opacity: 1 !important;
+  background: #fff !important;
+}
+body.view-only.dept-view-mode .save-btn { display: flex !important; }
+body.dept-view-mode .view-only-badge { display: none !important; }
+
 .view-only-badge {
   display: none; align-items: center; gap: 6px;
   background: #fffbeb; border: 1px solid #fde68a;
@@ -4711,11 +4722,15 @@ let currentDept = sessionStorage.getItem(DEPT_UNLOCK_KEY) || null;
 let pendingDeptId = null;
 
 // แสดงเฉพาะปุ่มเมนูของแผนกที่กำลังดูอยู่ในไซด์บาร์ (ซ่อนแผนกอื่นที่เคยปลดล็อกไว้ก่อนหน้า)
+// และเปิดให้กรอก/บันทึกข้อมูลได้เฉพาะหน้าแผนกนั้นแผนกเดียว (แผนกอื่นยังคงล็อกไว้)
 function markDeptUnlockedUI(id) {
   currentDept = id;
   sessionStorage.setItem(DEPT_UNLOCK_KEY, id);
   document.querySelectorAll('.nav-item[data-dept]').forEach(btn => {
     btn.classList.toggle('dept-unlocked', btn.getAttribute('data-dept') === id);
+  });
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.toggle('dept-editable', p.id === 'page-' + id);
   });
   const label = document.getElementById('prod-section-label');
   if (label) label.classList.add('dept-unlocked');
@@ -4889,10 +4904,12 @@ if (sessionStorage.getItem(SESSION_KEY) === '1') {
   isAdmin = true;
 }
 
-// Restore nav visibility for the department unlocked earlier this session (only one)
+// Restore nav visibility + edit access for the department unlocked earlier this session (only one)
 if (currentDept) {
   const navBtn = document.querySelector('.nav-item[data-dept="' + currentDept + '"]');
   if (navBtn) navBtn.classList.add('dept-unlocked');
+  const deptPage = document.getElementById('page-' + currentDept);
+  if (deptPage) deptPage.classList.add('dept-editable');
   const label = document.getElementById('prod-section-label');
   if (label) label.classList.add('dept-unlocked');
 }
