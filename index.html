@@ -3625,35 +3625,9 @@ function calcSawMonthlyAvg() {
   if (el('s2_month_days')) el('s2_month_days').textContent = s2Days > 0 ? `${s2Days} วัน` : '—';
 }
 
-async function loadData() {
-  // หมายเหตุ: ไม่ล้างค่าช่องกรอกทันทีตรงนี้ (ต่างจากโค้ดเดิม) — เพราะระหว่างที่รอข้อมูลจากเซิร์ฟเวอร์
-  // (มีช่วง await) หน้าจอจะโล่งว่างเปล่าไปชั่วขณะ ทำให้ตัวเลขดู "มาๆ หายๆ" โดยเฉพาะตอนที่ระบบ
-  // auto-refresh ทำงานอยู่เบื้องหลังทุก 20 วินาที จึงย้ายการตั้งค่า/ล้างช่องไปทำครั้งเดียวรวดเดียว
-  // ท้ายฟังก์ชัน หลังจากรู้ค่าสุดท้ายแล้ว
-  let data = null;
-  if (GAS_READY) {
-    try {
-      const resp = await fetch(`${GAS_URL}?action=get&key=${currentIso}`);
-      const result = await resp.json();
-      if (result.ok && result.data) {
-        data = result.data;
-        localStorage.setItem('door_' + currentIso, JSON.stringify(data));
-      } else {
-        // เซิร์ฟเวอร์ตอบกลับมาปกติ แต่ยังไม่มีข้อมูลของวันนี้ (เช่น เพิ่งกดบันทึกแล้วรีเฟรชทันที
-        // ก่อนที่การส่งข้อมูลแบบ fire-and-forget จะไปถึงเซิร์ฟเวอร์ทัน) — ใช้ข้อมูลที่แคชไว้ใน
-        // เครื่องนี้แทน ไม่ปล่อยให้ช่องกรอกว่างเปล่าทั้งที่มีข้อมูลอยู่แล้วในเครื่อง
-        const raw = localStorage.getItem('door_' + currentIso);
-        if (raw) data = JSON.parse(raw);
-      }
-    } catch(e) {
-      const raw = localStorage.getItem('door_' + currentIso);
-      if (raw) data = JSON.parse(raw);
-    }
-  } else {
-    const raw = localStorage.getItem('door_' + currentIso);
-    if (raw) data = JSON.parse(raw);
-  }
-  // ตั้งค่าทุกช่องรวดเดียวตรงนี้ (ไม่มี await คั่นกลาง) เพื่อไม่ให้เกิดช่วงที่หน้าจอว่างเปล่าให้เห็น
+// ตั้งค่าทุกช่องรวดเดียวตรงนี้ (ไม่มี await คั่นกลาง) เพื่อไม่ให้เกิดช่วงที่หน้าจอว่างเปล่าให้เห็น
+// แยกออกมาจาก loadData() เพื่อให้เรียกซ้ำได้ทั้งตอนแสดงข้อมูลจากแคชทันที และตอนข้อมูลจากเซิร์ฟเวอร์มาถึงทีหลัง
+function _applyLoadedData(data) {
   FIELDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = (data && data[id] !== undefined) ? data[id] : ''; });
   if (data) {
     FMT_FIELDS.forEach(id => numFmt(document.getElementById(id)));
@@ -3670,6 +3644,45 @@ async function loadData() {
   hcRefreshFromFields();
   _watchFormDirty();
   formDirty = false; // ข้อมูลที่เพิ่งโหลดมาถือว่า "ตรงกับเซิร์ฟเวอร์" แล้ว ยังไม่มีการแก้ไขค้างอยู่
+}
+
+// นับรอบการเรียก loadData() แต่ละครั้ง เพื่อกันปัญหา "แข่งกันเขียนทับ" (race condition) — ถ้าผู้ใช้
+// เปลี่ยนวันที่ซ้ำหลายครั้งเร็วๆ ระหว่างที่ยังรอข้อมูลจากเซิร์ฟเวอร์ของรอบเก่าอยู่ ต้องไม่ให้รอบเก่า
+// ที่เพิ่งได้ข้อมูลมาช้าไปเขียนทับข้อมูลของวันที่ผู้ใช้เปลี่ยนมาแล้วในภายหลัง
+let _loadDataSeq = 0;
+async function loadData() {
+  const requestIso = currentIso;
+  const mySeq = ++_loadDataSeq;
+
+  // 1) แสดงข้อมูลที่แคชไว้ในเครื่อง (localStorage) ทันทีก่อนเป็นอันดับแรก ไม่ต้องรอเน็ตเวิร์กเลย
+  //    (เดิมทั้งฟังก์ชัน await การดึงข้อมูลจากเซิร์ฟเวอร์ก่อนจะเห็นอะไรเลยสักอย่าง ทำให้เปลี่ยนวันที่
+  //    แล้วรู้สึกช้ามาก โดยเฉพาะตอนเน็ตช้า/สัญญาณไม่ดี)
+  let cached = null;
+  const rawCache = localStorage.getItem('door_' + requestIso);
+  if (rawCache) { try { cached = JSON.parse(rawCache); } catch(e) { cached = null; } }
+  _applyLoadedData(cached);
+
+  if (!GAS_READY) return;
+
+  // 2) ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์ต่อเบื้องหลัง (ไม่บล็อกหน้าจอ) แล้วค่อยอัปเดตซ้ำอีกทีถ้ายังจำเป็น
+  try {
+    const resp = await fetch(`${GAS_URL}?action=get&key=${requestIso}`);
+    const result = await resp.json();
+    // ผู้ใช้เปลี่ยนวันที่ไปแล้วระหว่างรอ หรือมีการเรียก loadData() รอบใหม่แซงมาแล้ว — ทิ้งผลรอบนี้ไป
+    if (mySeq !== _loadDataSeq || currentIso !== requestIso) return;
+    if (result.ok && result.data) {
+      localStorage.setItem('door_' + requestIso, JSON.stringify(result.data));
+      // ถ้าผู้ใช้กำลังพิมพ์ข้อมูลค้างอยู่ (ยังไม่ได้กดบันทึก) หรือโฟกัสอยู่ในช่องกรอก ห้ามเขียนทับ
+      // ข้อมูลที่เพิ่งพิมพ์ไปด้วยข้อมูลจากเซิร์ฟเวอร์ที่เพิ่งมาถึง — รอรอบถัดไปค่อยอัปเดตแทน
+      const active = document.activeElement;
+      const userTyping = formDirty || (active && FIELDS.includes(active.id));
+      if (!userTyping) _applyLoadedData(result.data);
+    }
+    // ถ้าเซิร์ฟเวอร์ตอบกลับมาปกติแต่ยังไม่มีข้อมูลของวันนี้ (result.data ว่าง) ให้คงข้อมูลจากแคชที่
+    // แสดงไปแล้วในขั้นตอนที่ 1 ไว้เหมือนเดิม ไม่ต้องไปล้างช่องกรอกทิ้ง
+  } catch(e) {
+    // เน็ตเวิร์กมีปัญหา — ปล่อยให้ข้อมูลจากแคชที่แสดงไปแล้วในขั้นตอนที่ 1 คงอยู่ต่อไป ไม่ต้องแจ้งเตือน
+  }
 }
 
 // ── ซิงก์ข้อมูลอัตโนมัติแบบเป็นระยะ (auto-refresh) ──
@@ -3738,29 +3751,17 @@ function setCurrentDateToLatestData() {
 async function getMonthData(yearMonthPrefix) {
   // yearMonthPrefix e.g. 'door_2026-07'
   const isoPrefix = yearMonthPrefix.replace('door_',''); // '2026-07'
-  // ดึงจาก Cloud มาเขียนทับเฉพาะวันที่ Cloud มี แล้ว "รวม" กับข้อมูลในเครื่อง
-  // (เดิม return เฉพาะข้อมูล Cloud ทันที ทำให้วันที่ยังไม่เคยขึ้น Cloud หายไปจากรายงาน)
   if (GAS_READY) {
     try {
       const resp = await fetch(`${GAS_URL}?action=getMonth&month=${isoPrefix}`);
       const result = await resp.json();
-      if (result.ok && result.data) {
-        Object.entries(result.data).forEach(([k,v]) => {
-          if (!v || typeof v !== 'object') return;
-          // ไม่ทับฟิลด์ที่มีค่าในเครื่องด้วยค่าว่างจาก Cloud
-          let local = {};
-          try { local = JSON.parse(localStorage.getItem('door_'+k)) || {}; } catch(e) {}
-          const merged = { ...local };
-          Object.entries(v).forEach(([f,val]) => {
-            if (val !== '' && val !== null && val !== undefined) merged[f] = val;
-            else if (!(f in merged)) merged[f] = val;
-          });
-          localStorage.setItem('door_'+k, JSON.stringify(merged));
-        });
+      if (result.ok && result.data && Object.keys(result.data).length > 0) {
+        Object.entries(result.data).forEach(([k,v]) => localStorage.setItem('door_'+k, JSON.stringify(v)));
+        return result.data;
       }
-    } catch(e) { /* ใช้ข้อมูลในเครื่อง */ }
+    } catch(e) { /* fall through to localStorage */ }
   }
-  // รวมข้อมูลจากเครื่อง (รวมทั้งข้อมูลที่เพิ่งดึงจาก Cloud)
+  // localStorage fallback
   const result = {};
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
@@ -5054,7 +5055,7 @@ window.addEventListener('load', () => {
     const hash = location.hash;
     if (hash && hash.startsWith('#sync=')) {
       const code = decodeURIComponent(hash.slice(6));
-      if (code.startsWith('PP:') || code.startsWith('PPKILN:')) {
+      if (code.startsWith('PP:')) {
         _applyImportCode(code, true);
         history.replaceState(null, '', location.pathname + location.search);
       }
@@ -5104,34 +5105,7 @@ function doImportSync() {
   _applyImportCode(raw, false);
 }
 
-// ── รวมข้อมูลที่นำเข้ากับข้อมูลบน Cloud แล้วส่งขึ้น Cloud ──
-// (เดิมบันทึกแค่ในเครื่อง แล้ว loadData() ดึงข้อมูลจาก Cloud มาทับ ทำให้ยอดที่นำเข้าหายไป)
-async function _importMergeAndPush(date, patch) {
-  const key = 'door_' + date;
-  let base = {};
-  try { const r = localStorage.getItem(key); if (r) base = JSON.parse(r) || {}; } catch(_) {}
-  if (GAS_READY) {
-    try {
-      const resp = await fetch(`${GAS_URL}?action=get&key=${date}`);
-      const result = await resp.json();
-      if (result.ok && result.data && typeof result.data === 'object') base = { ...base, ...result.data };
-    } catch(_) {}
-  }
-  const merged = { ...base, ...patch };
-  localStorage.setItem(key, JSON.stringify(merged));
-  if (GAS_READY) {
-    try {
-      await fetch(GAS_URL, {
-        method: 'POST', mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ key: date, data: merged })
-      });
-    } catch(e) { console.error('GAS import save error', e); }
-  }
-  return merged;
-}
-
-async function _applyImportCode(raw, fromHash) {
+function _applyImportCode(raw, fromHash) {
   const resEl = fromHash ? null : document.getElementById('_import-result');
   const showResult = (ok, msg) => {
     if (!resEl) return;
@@ -5160,13 +5134,14 @@ async function _applyImportCode(raw, fromHash) {
       const remCbft = (parseFloat(kiln.prevCbft) || 0) + (parseFloat(kiln.inCbft) || 0) - (parseFloat(kiln.outCbft) || 0);
       const remPal  = (parseInt(kiln.prevPal)   || 0) + (parseInt(kiln.inPal)   || 0) - (parseInt(kiln.outPal)   || 0);
 
-      const kPatch = {};
-      if (kiln.saw8Cbft !== undefined && kiln.saw8Cbft !== '') kPatch.d1_cf = kiln.saw8Cbft;
-      if (kiln.saw8Pal  !== undefined && kiln.saw8Pal  !== '') kPatch.d1_pl = kiln.saw8Pal;
-      kPatch.d2_cf = remCbft.toFixed(2);
-      kPatch.d2_pl = String(remPal);
-      showResult(true, '⏳ กำลังบันทึกขึ้น Cloud…');
-      await _importMergeAndPush(kDate, kPatch);
+      const kKey = 'door_' + kDate;
+      let kExisting = {};
+      try { const r = localStorage.getItem(kKey); if (r) kExisting = JSON.parse(r); } catch(_) {}
+      if (kiln.saw8Cbft !== undefined && kiln.saw8Cbft !== '') kExisting.d1_cf = kiln.saw8Cbft;
+      if (kiln.saw8Pal  !== undefined && kiln.saw8Pal  !== '') kExisting.d1_pl = kiln.saw8Pal;
+      kExisting.d2_cf = remCbft.toFixed(2);
+      kExisting.d2_pl = String(remPal);
+      localStorage.setItem(kKey, JSON.stringify(kExisting));
 
       currentIso = kDate;
       const [ky, km, kday] = kDate.split('-');
@@ -5200,13 +5175,14 @@ async function _applyImportCode(raw, fromHash) {
     try { payload = JSON.parse(decodeURIComponent(escape(atob(b64)))); } catch(e) { payload = JSON.parse(atob(b64)); }
 
     // Merge into localStorage
-    const patch = {};
-    if (payload.s1_enter !== undefined) patch.s1_enter = payload.s1_enter;
-    if (payload.s1_door  !== undefined) patch.s1_door  = payload.s1_door;
-    if (payload.s1_pal   !== undefined) patch.s1_pal   = payload.s1_pal;
-    if (payload.s1_oc    !== undefined && payload.s1_oc !== '') patch.s1_oc = payload.s1_oc;
-    showResult(true, '⏳ กำลังบันทึกขึ้น Cloud…');
-    await _importMergeAndPush(date, patch);
+    const key = 'door_' + date;
+    let existing = {};
+    try { const r = localStorage.getItem(key); if (r) existing = JSON.parse(r); } catch(_) {}
+    if (payload.s1_enter !== undefined) existing.s1_enter = payload.s1_enter;
+    if (payload.s1_door  !== undefined) existing.s1_door  = payload.s1_door;
+    if (payload.s1_pal   !== undefined) existing.s1_pal   = payload.s1_pal;
+    if (payload.s1_oc    !== undefined && payload.s1_oc !== '') existing.s1_oc = payload.s1_oc;
+    localStorage.setItem(key, JSON.stringify(existing));
 
     // Switch to that date and load
     currentIso = date;
