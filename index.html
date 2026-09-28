@@ -5054,7 +5054,7 @@ window.addEventListener('load', () => {
     const hash = location.hash;
     if (hash && hash.startsWith('#sync=')) {
       const code = decodeURIComponent(hash.slice(6));
-      if (code.startsWith('PP:')) {
+      if (code.startsWith('PP:') || code.startsWith('PPKILN:')) {
         _applyImportCode(code, true);
         history.replaceState(null, '', location.pathname + location.search);
       }
@@ -5104,7 +5104,34 @@ function doImportSync() {
   _applyImportCode(raw, false);
 }
 
-function _applyImportCode(raw, fromHash) {
+// ── รวมข้อมูลที่นำเข้ากับข้อมูลบน Cloud แล้วส่งขึ้น Cloud ──
+// (เดิมบันทึกแค่ในเครื่อง แล้ว loadData() ดึงข้อมูลจาก Cloud มาทับ ทำให้ยอดที่นำเข้าหายไป)
+async function _importMergeAndPush(date, patch) {
+  const key = 'door_' + date;
+  let base = {};
+  try { const r = localStorage.getItem(key); if (r) base = JSON.parse(r) || {}; } catch(_) {}
+  if (GAS_READY) {
+    try {
+      const resp = await fetch(`${GAS_URL}?action=get&key=${date}`);
+      const result = await resp.json();
+      if (result.ok && result.data && typeof result.data === 'object') base = { ...base, ...result.data };
+    } catch(_) {}
+  }
+  const merged = { ...base, ...patch };
+  localStorage.setItem(key, JSON.stringify(merged));
+  if (GAS_READY) {
+    try {
+      await fetch(GAS_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ key: date, data: merged })
+      });
+    } catch(e) { console.error('GAS import save error', e); }
+  }
+  return merged;
+}
+
+async function _applyImportCode(raw, fromHash) {
   const resEl = fromHash ? null : document.getElementById('_import-result');
   const showResult = (ok, msg) => {
     if (!resEl) return;
@@ -5133,14 +5160,13 @@ function _applyImportCode(raw, fromHash) {
       const remCbft = (parseFloat(kiln.prevCbft) || 0) + (parseFloat(kiln.inCbft) || 0) - (parseFloat(kiln.outCbft) || 0);
       const remPal  = (parseInt(kiln.prevPal)   || 0) + (parseInt(kiln.inPal)   || 0) - (parseInt(kiln.outPal)   || 0);
 
-      const kKey = 'door_' + kDate;
-      let kExisting = {};
-      try { const r = localStorage.getItem(kKey); if (r) kExisting = JSON.parse(r); } catch(_) {}
-      if (kiln.saw8Cbft !== undefined && kiln.saw8Cbft !== '') kExisting.d1_cf = kiln.saw8Cbft;
-      if (kiln.saw8Pal  !== undefined && kiln.saw8Pal  !== '') kExisting.d1_pl = kiln.saw8Pal;
-      kExisting.d2_cf = remCbft.toFixed(2);
-      kExisting.d2_pl = String(remPal);
-      localStorage.setItem(kKey, JSON.stringify(kExisting));
+      const kPatch = {};
+      if (kiln.saw8Cbft !== undefined && kiln.saw8Cbft !== '') kPatch.d1_cf = kiln.saw8Cbft;
+      if (kiln.saw8Pal  !== undefined && kiln.saw8Pal  !== '') kPatch.d1_pl = kiln.saw8Pal;
+      kPatch.d2_cf = remCbft.toFixed(2);
+      kPatch.d2_pl = String(remPal);
+      showResult(true, '⏳ กำลังบันทึกขึ้น Cloud…');
+      await _importMergeAndPush(kDate, kPatch);
 
       currentIso = kDate;
       const [ky, km, kday] = kDate.split('-');
@@ -5174,14 +5200,13 @@ function _applyImportCode(raw, fromHash) {
     try { payload = JSON.parse(decodeURIComponent(escape(atob(b64)))); } catch(e) { payload = JSON.parse(atob(b64)); }
 
     // Merge into localStorage
-    const key = 'door_' + date;
-    let existing = {};
-    try { const r = localStorage.getItem(key); if (r) existing = JSON.parse(r); } catch(_) {}
-    if (payload.s1_enter !== undefined) existing.s1_enter = payload.s1_enter;
-    if (payload.s1_door  !== undefined) existing.s1_door  = payload.s1_door;
-    if (payload.s1_pal   !== undefined) existing.s1_pal   = payload.s1_pal;
-    if (payload.s1_oc    !== undefined && payload.s1_oc !== '') existing.s1_oc = payload.s1_oc;
-    localStorage.setItem(key, JSON.stringify(existing));
+    const patch = {};
+    if (payload.s1_enter !== undefined) patch.s1_enter = payload.s1_enter;
+    if (payload.s1_door  !== undefined) patch.s1_door  = payload.s1_door;
+    if (payload.s1_pal   !== undefined) patch.s1_pal   = payload.s1_pal;
+    if (payload.s1_oc    !== undefined && payload.s1_oc !== '') patch.s1_oc = payload.s1_oc;
+    showResult(true, '⏳ กำลังบันทึกขึ้น Cloud…');
+    await _importMergeAndPush(date, patch);
 
     // Switch to that date and load
     currentIso = date;
