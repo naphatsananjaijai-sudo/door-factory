@@ -3738,17 +3738,29 @@ function setCurrentDateToLatestData() {
 async function getMonthData(yearMonthPrefix) {
   // yearMonthPrefix e.g. 'door_2026-07'
   const isoPrefix = yearMonthPrefix.replace('door_',''); // '2026-07'
+  // ดึงจาก Cloud มาเขียนทับเฉพาะวันที่ Cloud มี แล้ว "รวม" กับข้อมูลในเครื่อง
+  // (เดิม return เฉพาะข้อมูล Cloud ทันที ทำให้วันที่ยังไม่เคยขึ้น Cloud หายไปจากรายงาน)
   if (GAS_READY) {
     try {
       const resp = await fetch(`${GAS_URL}?action=getMonth&month=${isoPrefix}`);
       const result = await resp.json();
-      if (result.ok && result.data && Object.keys(result.data).length > 0) {
-        Object.entries(result.data).forEach(([k,v]) => localStorage.setItem('door_'+k, JSON.stringify(v)));
-        return result.data;
+      if (result.ok && result.data) {
+        Object.entries(result.data).forEach(([k,v]) => {
+          if (!v || typeof v !== 'object') return;
+          // ไม่ทับฟิลด์ที่มีค่าในเครื่องด้วยค่าว่างจาก Cloud
+          let local = {};
+          try { local = JSON.parse(localStorage.getItem('door_'+k)) || {}; } catch(e) {}
+          const merged = { ...local };
+          Object.entries(v).forEach(([f,val]) => {
+            if (val !== '' && val !== null && val !== undefined) merged[f] = val;
+            else if (!(f in merged)) merged[f] = val;
+          });
+          localStorage.setItem('door_'+k, JSON.stringify(merged));
+        });
       }
-    } catch(e) { /* fall through to localStorage */ }
+    } catch(e) { /* ใช้ข้อมูลในเครื่อง */ }
   }
-  // localStorage fallback
+  // รวมข้อมูลจากเครื่อง (รวมทั้งข้อมูลที่เพิ่งดึงจาก Cloud)
   const result = {};
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
