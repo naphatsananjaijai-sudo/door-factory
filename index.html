@@ -225,6 +225,22 @@ body {
 .save-btn:hover { opacity: .9; box-shadow: 0 4px 14px rgba(14,165,233,.40); }
 .save-btn:active { transform: scale(.97); }
 .save-btn[disabled] { display: none !important; }
+/* มือถือ: แถบด้านบนแคบ ปุ่มบันทึกถูกดันตกขอบจอจนมองไม่เห็น (โดยเฉพาะเครื่องที่ตั้งตัวอักษรใหญ่)
+   → ย้ายปุ่มบันทึกมาเป็นปุ่มลอยมุมขวาล่าง กดได้เสมอ */
+@media (max-width: 700px) {
+  .topbar .save-btn {
+    position: fixed; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    z-index: 950; padding: 13px 22px !important; font-size: 16px !important;
+    border-radius: 999px; box-shadow: 0 6px 20px rgba(14,165,233,.45);
+  }
+  .topbar .save-btn .btn-label { display: inline !important; }
+  /* เว้นที่ท้ายหน้าให้ช่องสุดท้ายไม่ถูกปุ่มลอยบัง */
+  .content { padding-bottom: 96px !important; }
+  /* ถ้าปุ่มบนแถบด้านบนยังล้นจอ ให้เลื่อนแถบไปทางซ้าย-ขวาได้ ไม่ถูกตัดหาย */
+  .topbar { overflow-x: auto !important; scrollbar-width: none; }
+  .topbar::-webkit-scrollbar { display: none; }
+  .topbar > * { flex-shrink: 0; }
+}
 
 /* ── Lock / Auth ── */
 .auth-btn {
