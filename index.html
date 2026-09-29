@@ -1867,12 +1867,20 @@ html, body { max-width: 100%; overflow-x: hidden; }
       <div class="card-title"><span class="title-bar" style="background:var(--purple-500)"></span>Stock โครง <span style="font-weight:500;color:#94a3b8;font-size:11px;margin-left:6px;">(ยอดคงเหลือ ณ สิ้นวัน)</span></div>
       <div class="g2">
         <div class="metric-item">
-          <div class="metric-item-label">Stock โครงกระดาษ</div>
+          <div class="metric-item-label">Stock โครงกระดาษ (รวม)</div>
           <div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--orange-500)" type="number" id="p1_frame_st" placeholder="0" oninput="updateOverview()"><span class="metric-unit">pcs.</span></div>
+          <div class="g2" style="gap:8px;margin-top:8px;">
+            <div class="metric-item wh-ag"><div class="metric-item-label">Ag</div><div class="metric-item-input-row"><input class="metric-item-input" type="number" id="p1_frame_st_ag" placeholder="0" oninput="calcFrameStSum()"><span class="metric-unit">pcs.</span></div></div>
+            <div class="metric-item wh-cp"><div class="metric-item-label">C+</div><div class="metric-item-input-row"><input class="metric-item-input" type="number" id="p1_frame_st_cp" placeholder="0" oninput="calcFrameStSum()"><span class="metric-unit">pcs.</span></div></div>
+          </div>
         </div>
         <div class="metric-item">
-          <div class="metric-item-label">Stock โครงไม้</div>
+          <div class="metric-item-label">Stock โครงไม้ (รวม)</div>
           <div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--pink-500)" type="number" id="bf_w_st" placeholder="0" oninput="updateOverview()"><span class="metric-unit">pcs.</span></div>
+          <div class="g2" style="gap:8px;margin-top:8px;">
+            <div class="metric-item wh-ag"><div class="metric-item-label">Ag</div><div class="metric-item-input-row"><input class="metric-item-input" type="number" id="bf_w_st_ag" placeholder="0" oninput="calcFrameStSum()"><span class="metric-unit">pcs.</span></div></div>
+            <div class="metric-item wh-cp"><div class="metric-item-label">C+</div><div class="metric-item-input-row"><input class="metric-item-input" type="number" id="bf_w_st_cp" placeholder="0" oninput="calcFrameStSum()"><span class="metric-unit">pcs.</span></div></div>
+          </div>
         </div>
       </div>
     </div>
@@ -2590,6 +2598,16 @@ function calcProg(inId, target, pctId, barId) {
   bar.style.background = barColor(pct);
 }
 
+/* ── Stock โครงกระดาษ/โครงไม้ รวม = Ag + C+ (ถ้ากรอก Ag/C+ อย่างน้อยหนึ่งช่อง) ── */
+function calcFrameStSum() {
+  [['p1_frame_st','p1_frame_st_ag','p1_frame_st_cp'],['bf_w_st','bf_w_st_ag','bf_w_st_cp']].forEach(([t,a,c]) => {
+    const tEl = document.getElementById(t), aEl = document.getElementById(a), cEl = document.getElementById(c);
+    if (!tEl || !aEl || !cEl) return;
+    if (aEl.value !== '' || cEl.value !== '') tEl.value = (g(a) + g(c)).toLocaleString('en-US');
+  });
+  updateOverview();
+}
+
 /* ── คลัง FG รวม และ รวมโหลด ── */
 function calcWhSum() {
   const inEl = document.getElementById('wh_in');
@@ -3149,7 +3167,7 @@ const FMT_FIELDS = [
   'bj_6','bj_45','bj_3','bj_fj',
   'bs_h1','bs_h1_ben','bs_h1_mok','bs_k1','bs_k2','bs_mok','bs_lvl',
   'bf_w','bf_m',
-  'p1_frame','p1_frame_st','bf_w_st','p2_hot','p2_down','p3_cold',
+  'p1_frame','p1_frame_st','bf_w_st','p1_frame_st_ag','p1_frame_st_cp','bf_w_st_ag','bf_w_st_cp','p2_hot','p2_down','p3_cold',
   'cts_sloy','cts_wrap','w_hot','w_cold','w_sloy',
   'pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8',
   'wh_in_ag','wh_in_cp','wh_out_ag','wh_out_cp','wh_st'
@@ -3335,7 +3353,15 @@ function updateOverview() {
       R('โครงไม้', g('bf_w'), 'pcs.', {vc:'#db2777', tk:'bf_w'}) +
       R('มอก.', g('bf_m'), 'pcs.', {vc:'#db2777', tk:'bf_m'}) +
       R('Stock โครงกระดาษ', g('p1_frame_st'), 'pcs.', {sm:true, vc:'#7c3aed', tk:'p1_frame_st'}) +
+      `<div style="display:flex;gap:6px;margin:0 0 4px;">
+        <span style="font-size:11px;color:#475569;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:2px 8px;">Ag ${(g('p1_frame_st_ag')||0).toLocaleString('en-US')}</span>
+        <span style="font-size:11px;color:#475569;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:2px 8px;">C+ ${(g('p1_frame_st_cp')||0).toLocaleString('en-US')}</span>
+      </div>` +
       R('Stock โครงไม้', g('bf_w_st'), 'pcs.', {sm:true, vc:'#7c3aed', tk:'bf_w_st'}) +
+      `<div style="display:flex;gap:6px;margin:0 0 4px;">
+        <span style="font-size:11px;color:#475569;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:2px 8px;">Ag ${(g('bf_w_st_ag')||0).toLocaleString('en-US')}</span>
+        <span style="font-size:11px;color:#475569;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:2px 8px;">C+ ${(g('bf_w_st_cp')||0).toLocaleString('en-US')}</span>
+      </div>` +
       groupBarChart([
         {name:'ยิงโครงกระดาษ', color:'#ea580c', fields:['p1_frame']},
         {name:'เป้า/วัน', color:'#cbd5e1', constVal:tg('p1_frame')},
@@ -3413,8 +3439,8 @@ const FIELDS = [
   'bk_pr','bk_h','bk_h_ben','bk_h_mok','bk_ben','bk_lvl','bc_cuft','bc_rate',
   'bj_6','bj_45','bj_3','bj_fj',
   'bs_h1','bs_h1_ben','bs_h1_mok','bs_k1','bs_k2','bs_mok','bs_lvl',
-  'bf_w','bf_m','bf_w_st','bf_oc','b8_oc',
-  'p1_frame','p1_frame_st','p1_oc','p2_hot','p2_oc','p2_down','p3_cold','p3_oc',
+  'bf_w','bf_m','bf_w_st','bf_w_st_ag','bf_w_st_cp','bf_oc','b8_oc',
+  'p1_frame','p1_frame_st','p1_frame_st_ag','p1_frame_st_cp','p1_oc','p2_hot','p2_oc','p2_down','p3_cold','p3_oc',
   'cts_sloy','cts_wrap','cts_oc','w_hot','w_cold','w_sloy',
   'pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_oc',
   'wh_in','wh_in_ag','wh_in_cp','wh_out','wh_out_ag','wh_out_cp','wh_st','wh_oc'
@@ -3946,7 +3972,11 @@ async function buildMonthly() {
         {l:'ยิงโครงไม้',v:fmtN(tot.bf_w,0),tk:'bf_w',u:'pcs.'},
         {l:'ยิงโครง มอก.',v:fmtN(tot.bf_m,0),tk:'bf_m',u:'pcs.'},
         {l:'Stock โครงกระดาษ (ล่าสุด)',v:(()=>{const d=days.slice().reverse().find(({data:r})=>toNum(r.p1_frame_st)>0);return d?fmtN(toNum(d.data.p1_frame_st),0):'—';})(),raw:(()=>{const d=days.slice().reverse().find(({data:r})=>toNum(r.p1_frame_st)>0);return d?toNum(d.data.p1_frame_st):0;})(),tk:'p1_frame_st',ratio:true,u:'pcs.', highlight:true},
+        {l:'Stock โครงกระดาษ Ag (ล่าสุด)',v:(()=>{const d=days.slice().reverse().find(({data:r})=>toNum(r.p1_frame_st)>0);return d&&(d.data.p1_frame_st_ag!==undefined&&d.data.p1_frame_st_ag!=='')?fmtN(toNum(d.data.p1_frame_st_ag),0):'—';})(),u:'pcs.'},
+        {l:'Stock โครงกระดาษ C+ (ล่าสุด)',v:(()=>{const d=days.slice().reverse().find(({data:r})=>toNum(r.p1_frame_st)>0);return d&&(d.data.p1_frame_st_cp!==undefined&&d.data.p1_frame_st_cp!=='')?fmtN(toNum(d.data.p1_frame_st_cp),0):'—';})(),u:'pcs.'},
         {l:'Stock โครงไม้ (ล่าสุด)',v:(()=>{const d=days.slice().reverse().find(({data:r})=>toNum(r.bf_w_st)>0);return d?fmtN(toNum(d.data.bf_w_st),0):'—';})(),raw:(()=>{const d=days.slice().reverse().find(({data:r})=>toNum(r.bf_w_st)>0);return d?toNum(d.data.bf_w_st):0;})(),tk:'bf_w_st',ratio:true,u:'pcs.', highlight:true},
+        {l:'Stock โครงไม้ Ag (ล่าสุด)',v:(()=>{const d=days.slice().reverse().find(({data:r})=>toNum(r.bf_w_st)>0);return d&&(d.data.bf_w_st_ag!==undefined&&d.data.bf_w_st_ag!=='')?fmtN(toNum(d.data.bf_w_st_ag),0):'—';})(),u:'pcs.'},
+        {l:'Stock โครงไม้ C+ (ล่าสุด)',v:(()=>{const d=days.slice().reverse().find(({data:r})=>toNum(r.bf_w_st)>0);return d&&(d.data.bf_w_st_cp!==undefined&&d.data.bf_w_st_cp!=='')?fmtN(toNum(d.data.bf_w_st_cp),0):'—';})(),u:'pcs.'},
         {l:'เฉลี่ยกำลังคน (ยิงโครงกระดาษ)',v:daysWithData?fmtN(tot.p1_oc/daysWithData,0):'—',u:`คน / OC 20`},
         {l:'เฉลี่ยกำลังคน (ยิงโครงไม้)',v:daysWithData?fmtN(tot.bf_oc/daysWithData,0):'—',u:`คน / OC 10`},
       ]
@@ -4372,6 +4402,15 @@ async function buildMCompare() {
   };
   const p1StC = _lastField(curData, 'p1_frame_st'), p1StP = _lastField(prevData, 'p1_frame_st');
   const bfStC = _lastField(curData, 'bf_w_st'),      bfStP = _lastField(prevData, 'bf_w_st');
+  // Ag / C+ ของวันเดียวกับที่ใช้ Stock รวมล่าสุด
+  const _lastPart = (obj, base, part) => {
+    const ks = Object.keys(obj).sort();
+    for (let i = ks.length - 1; i >= 0; i--) {
+      const r = obj[ks[i]] || {};
+      if (toNum(r[base]) > 0) return toNum(r[base + part]);
+    }
+    return 0;
+  };
   const curDays  = _wd(curData);
   const prevDays = _wd(prevData);
   document.getElementById('mc-subtitle').textContent =
@@ -4419,7 +4458,11 @@ async function buildMCompare() {
       {l:'ยิงโครงกระดาษ', tk:'p1_frame', vC:tC.p1_frame, vP:tP.p1_frame, u:'pcs.'},
       {l:'ยิงโครงไม้', tk:'bf_w',    vC:tC.bf_w+tC.bf_m, vP:tP.bf_w+tP.bf_m, u:'pcs.'},
       {l:'Stock โครงกระดาษ (ล่าสุด)', noPerDay:true, tk:'p1_frame_st', vC:p1StC, vP:p1StP, u:'pcs.'},
+      {l:'  ↳ Ag', noPerDay:true, vC:_lastPart(curData,'p1_frame_st','_ag'), vP:_lastPart(prevData,'p1_frame_st','_ag'), u:'pcs.'},
+      {l:'  ↳ C+', noPerDay:true, vC:_lastPart(curData,'p1_frame_st','_cp'), vP:_lastPart(prevData,'p1_frame_st','_cp'), u:'pcs.'},
       {l:'Stock โครงไม้ (ล่าสุด)', noPerDay:true, tk:'bf_w_st', vC:bfStC, vP:bfStP, u:'pcs.'},
+      {l:'  ↳ Ag', noPerDay:true, vC:_lastPart(curData,'bf_w_st','_ag'), vP:_lastPart(prevData,'bf_w_st','_ag'), u:'pcs.'},
+      {l:'  ↳ C+', noPerDay:true, vC:_lastPart(curData,'bf_w_st','_cp'), vP:_lastPart(prevData,'bf_w_st','_cp'), u:'pcs.'},
     ]},
     { title:'⚠️ ของเสีย', rows:[
       {l:'ของเสียรวม', tk:'w_total', vC:wTotC, vP:wTotP, u:'บาน', lowerBetter:true},
@@ -4533,7 +4576,11 @@ async function buildWeekly() {
     { label:'ยิงโครงไม้', tk:'bf_w',                        unit:'pcs.',      fn: d=>toNum(d.bf_w),                            grp:'🔧 ยิงโครง' },
     { label:'ยิงโครง มอก.', tk:'bf_m',                      unit:'pcs.',      fn: d=>toNum(d.bf_m),                            grp:'🔧 ยิงโครง' },
     { label:'Stock โครงกระดาษ (ล่าสุด)', tk:'p1_frame_st', isLast:true,      unit:'pcs.',      fn: d=>toNum(d.p1_frame_st),                     grp:'🔧 ยิงโครง' },
+    { label:'Stock โครงกระดาษ Ag (ล่าสุด)', isLast:true, lastOf:'p1_frame_st', unit:'pcs.', fn: d=>toNum(d.p1_frame_st_ag), grp:'🔧 ยิงโครง' },
+    { label:'Stock โครงกระดาษ C+ (ล่าสุด)', isLast:true, lastOf:'p1_frame_st', unit:'pcs.', fn: d=>toNum(d.p1_frame_st_cp), grp:'🔧 ยิงโครง' },
     { label:'Stock โครงไม้ (ล่าสุด)', tk:'bf_w_st', isLast:true,             unit:'pcs.',      fn: d=>toNum(d.bf_w_st),                         grp:'🔧 ยิงโครง' },
+    { label:'Stock โครงไม้ Ag (ล่าสุด)', isLast:true, lastOf:'bf_w_st', unit:'pcs.', fn: d=>toNum(d.bf_w_st_ag), grp:'🔧 ยิงโครง' },
+    { label:'Stock โครงไม้ C+ (ล่าสุด)', isLast:true, lastOf:'bf_w_st', unit:'pcs.', fn: d=>toNum(d.bf_w_st_cp), grp:'🔧 ยิงโครง' },
     // อัดร้อน/อัดเย็น
     { label:'อัดร้อน', tk:'p2_hot',                           unit:'บาน',       fn: d=>toNum(d.p2_hot),                          grp:'🔥 อัดร้อน/อัดเย็น' },
     { label:'Downtime',                           unit:'นาที',      fn: d=>toNum(d.p2_down),                         grp:'🔥 อัดร้อน/อัดเย็น' },
@@ -4582,7 +4629,7 @@ async function buildWeekly() {
       } else if (m.isLast) {
         // Stock = ยอดคงเหลือ → เอาค่าของวันล่าสุดที่มีการกรอก ไม่ใช่ผลรวม
         let last = 0;
-        days.forEach(({data}) => { if (data && m.fn(data) > 0) last = m.fn(data); });
+        days.forEach(({data}) => { if (data && (m.lastOf ? toNum(data[m.lastOf]) > 0 : m.fn(data) > 0)) last = m.fn(data); });
         totals[m.label] = last;
       } else {
         totals[m.label] = days.reduce((s, {data}) => s + (data ? m.fn(data) : 0), 0);
