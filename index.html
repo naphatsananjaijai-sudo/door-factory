@@ -2016,6 +2016,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
         <div class="metric-item"><div class="metric-item-label">4"×12"</div><div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--yellow-600)" type="number" id="pl_4x12" placeholder="0"><span class="metric-unit">Pallet</span></div></div>
         <div class="metric-item"><div class="metric-item-label">7"×9"</div><div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--yellow-600)" type="number" id="pl_7x9" placeholder="0"><span class="metric-unit">Pallet</span></div></div>
         <div class="metric-item"><div class="metric-item-label">5"×8"</div><div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--yellow-600)" type="number" id="pl_5x8" placeholder="0"><span class="metric-unit">Pallet</span></div></div>
+        <div class="metric-item"><div class="metric-item-label">6"×16"</div><div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--yellow-600)" type="number" id="pl_6x16" placeholder="0"><span class="metric-unit">Pallet</span></div></div>
       </div>
     </div>
     <div class="manpower-strip section-gap" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border-color:#fde68a;">
@@ -3169,7 +3170,7 @@ const FMT_FIELDS = [
   'bf_w','bf_m',
   'p1_frame','p1_frame_st','bf_w_st','p1_frame_st_ag','p1_frame_st_cp','bf_w_st_ag','bf_w_st_cp','p2_hot','p2_down','p3_cold',
   'cts_sloy','cts_wrap','w_hot','w_cold','w_sloy',
-  'pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8',
+  'pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_6x16',
   'wh_in_ag','wh_in_cp','wh_out_ag','wh_out_cp','wh_st'
 ];
 
@@ -3280,7 +3281,7 @@ function updateOverview() {
   const frt = g('p1_oc') + g('bf_oc');
   const prt = g('p2_oc') + g('p3_oc');
   const wt  = g('w_hot') + g('w_cold') + g('w_sloy');
-  const plt = g('pl_3x6')+g('pl_4x6')+g('pl_4x8s')+g('pl_4x8sn')+g('pl_4x8h')+g('pl_4x9')+g('pl_4x10')+g('pl_4x12')+g('pl_7x9')+g('pl_5x8');
+  const plt = g('pl_3x6')+g('pl_4x6')+g('pl_4x8s')+g('pl_4x8sn')+g('pl_4x8h')+g('pl_4x9')+g('pl_4x10')+g('pl_4x12')+g('pl_7x9')+g('pl_5x8')+g('pl_6x16');
   const s1Avg = _sawMonthlyAvg(['s1_door','s1_pal']);
   const s2Avg = _sawMonthlyAvg(['s2_saw']);
 
@@ -3389,10 +3390,10 @@ function updateOverview() {
       g('cts_oc'), 25, {l:'ห่อประตูวันนี้', v:g('cts_wrap'), u:'บาน', tk:'cts_wrap'}),
 
     C('📦','พาเลท','#d97706','linear-gradient(135deg,#fffbeb,#fef3c7)','#fcd34d',
-      miniGrid([['3×6',g('pl_3x6')],['4×6',g('pl_4x6')],['4×8S',g('pl_4x8s')],['4×8SN',g('pl_4x8sn')],['4×8H',g('pl_4x8h')],['4×9',g('pl_4x9')],['4×10',g('pl_4x10')],['4×12',g('pl_4x12')],['7×9',g('pl_7x9')],['5×8',g('pl_5x8')]],'#fffbeb','#fde68a','#92400e') +
+      miniGrid([['3×6',g('pl_3x6')],['4×6',g('pl_4x6')],['4×8S',g('pl_4x8s')],['4×8SN',g('pl_4x8sn')],['4×8H',g('pl_4x8h')],['4×9',g('pl_4x9')],['4×10',g('pl_4x10')],['4×12',g('pl_4x12')],['7×9',g('pl_7x9')],['5×8',g('pl_5x8')],['6×16',g('pl_6x16')]],'#fffbeb','#fde68a','#92400e') +
       R('รวมทั้งหมด', plt, 'Pallet', {vc:'#d97706', tk:'pl_total'}) +
       groupBarChart([
-        {name:'พาเลทรวม', color:'#d97706', fields:['pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8']},
+        {name:'พาเลทรวม', color:'#d97706', fields:['pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_6x16']},
         {name:'เป้า/วัน', color:'#cbd5e1', constVal:tg('pl_total')},
       ], {title:'ยอดพาเลทรายวัน เทียบเป้า', unit:'Pallet', target:tg('pl_total'), targetAsBar:true}),
       g('pl_oc'), 6, {l:'พาเลทรวมวันนี้', v:plt, u:'Pallet', tk:'pl_total'}),
@@ -3442,7 +3443,7 @@ const FIELDS = [
   'bf_w','bf_m','bf_w_st','bf_w_st_ag','bf_w_st_cp','bf_oc','b8_oc',
   'p1_frame','p1_frame_st','p1_frame_st_ag','p1_frame_st_cp','p1_oc','p2_hot','p2_oc','p2_down','p3_cold','p3_oc',
   'cts_sloy','cts_wrap','cts_oc','w_hot','w_cold','w_sloy',
-  'pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_oc',
+  'pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_6x16','pl_oc',
   'wh_in','wh_in_ag','wh_in_cp','wh_out','wh_out_ag','wh_out_cp','wh_st','wh_oc'
 ];
 
@@ -3866,7 +3867,7 @@ async function buildMonthly() {
     'b8_oc','bf_w','bf_m','bf_w_st','bf_oc',
     'p1_frame','p1_frame_st','p1_oc','p2_hot','p2_oc','p2_down','p3_cold','p3_oc',
     'cts_sloy','cts_wrap','cts_oc','w_hot','w_cold','w_sloy',
-    'pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_oc',
+    'pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_6x16','pl_oc',
     'wh_in','wh_in_ag','wh_in_cp','wh_out','wh_out_ag','wh_out_cp','wh_st','wh_oc'];
   sumFields.forEach(f => tot[f] = 0);
 
@@ -3875,7 +3876,7 @@ async function buildMonthly() {
   });
 
   const daysWithData = days.length;
-  const totalPallet = ['pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8'].reduce((s,f)=>s+tot[f],0);
+  const totalPallet = ['pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_6x16'].reduce((s,f)=>s+tot[f],0);
   const totalWaste = tot['w_hot']+tot['w_cold']+tot['w_sloy'];
   const wasteBase = tot['p2_hot']; // ฐาน = ยอดอัดร้อน
   const wastePct = wasteBase>0 ? (totalWaste/wasteBase*100) : 0;
@@ -4016,6 +4017,7 @@ async function buildMonthly() {
         {l:'4"×12"',v:fmtN(tot.pl_4x12,0),u:'Pallet'},
         {l:'7"×9"',v:fmtN(tot.pl_7x9,0),u:'Pallet'},
         {l:'5"×8"',v:fmtN(tot.pl_5x8,0),u:'Pallet'},
+        {l:'6"×16"',v:fmtN(tot.pl_6x16,0),u:'Pallet'},
         {l:'รวมทุกขนาด',v:fmtN(totalPallet,0),tk:'pl_total',u:'Pallet'},
         {l:'เฉลี่ยกำลังคน',v:daysWithData?fmtN(tot.pl_oc/daysWithData,0):'—',u:`คน / OC 6`},
       ]
@@ -4091,7 +4093,7 @@ async function buildMonthly() {
     {h:'อัดร้อน (บาน)', dec:0, fn: d => fmtN(toNum(d.data.p2_hot),0)},
     {h:'อัดเย็น (บาน)', dec:0, fn: d => fmtN(toNum(d.data.p3_cold),0)},
     {h:'ห่อประตู (บาน)', dec:0, fn: d => fmtN(toNum(d.data.cts_wrap),0)},
-    {h:'พาเลท (Pallet)', dec:0, fn: d => { const pl=['pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8'].reduce((s,f)=>s+toNum(d.data[f]),0); return fmtN(pl,0); }},
+    {h:'พาเลท (Pallet)', dec:0, fn: d => { const pl=['pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_6x16'].reduce((s,f)=>s+toNum(d.data[f]),0); return fmtN(pl,0); }},
     {h:'เข้าคลัง FG (บาน)', dec:0, fn: d => fmtN(toNum(d.data.wh_in),0)},
     {h:'โหลดสินค้า (บาน)', dec:0, fn: d => fmtN(toNum(d.data.wh_out),0)},
   ];
@@ -4196,7 +4198,8 @@ const WK_METRICS = [
   { label:'พาเลท 4"×12"',            unit:'Pallet',   fn: d => toNum(d.pl_4x12)                                 },
   { label:'พาเลท 7"×9"',             unit:'Pallet',   fn: d => toNum(d.pl_7x9)                                  },
   { label:'พาเลท 5"×8"',             unit:'Pallet',   fn: d => toNum(d.pl_5x8)                                  },
-  { label:'พาเลท รวม',               unit:'Pallet',   fn: d => ['pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8'].reduce((s,f)=>s+toNum(d[f]),0) },
+  { label:'พาเลท 6"×16"',             unit:'Pallet',   fn: d => toNum(d.pl_6x16)                                  },
+  { label:'พาเลท รวม',               unit:'Pallet',   fn: d => ['pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_6x16'].reduce((s,f)=>s+toNum(d[f]),0) },
   // ── คลังสินค้า ──
   { label:'เข้าคลัง FG รวม',         unit:'บาน',    fn: d => toNum(d.wh_in)                                   },
   { label:'เข้าคลัง Ag',             unit:'บาน',    fn: d => toNum(d.wh_in_ag)                                },
@@ -4370,7 +4373,7 @@ async function buildMCompare() {
     's1_door','s1_pal','s2_saw',
     'bf_w','bf_m','p1_frame','p2_hot','p2_down','p3_cold',
     'cts_sloy','cts_wrap','w_hot','w_cold','w_sloy',
-    'pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8',
+    'pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_6x16',
     'wh_in_ag','wh_in_cp','wh_out_ag','wh_out_cp'
   ];
   const tC = {}, tP = {};
@@ -4415,7 +4418,7 @@ async function buildMCompare() {
   const prevDays = _wd(prevData);
   document.getElementById('mc-subtitle').textContent =
     `เปรียบเทียบ ${prevLabel} (${prevDays} วัน) กับ ${curLabel} (${curDays} วัน) · คอลัมน์ "ค่าเฉลี่ย" คิดจากค่าเฉลี่ยต่อวัน`;
-  const palF = ['pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8'];
+  const palF = ['pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_6x16'];
   const palC = palF.reduce((s,f)=>s+tC[f],0);
   const palP = palF.reduce((s,f)=>s+tP[f],0);
   const wTotC = tC.w_hot+tC.w_cold+tC.w_sloy;
@@ -4602,7 +4605,8 @@ async function buildWeekly() {
     { label:'พาเลท 4"×12"',                     unit:'Pallet',      fn: d=>toNum(d.pl_4x12),                         grp:'🪵 พาเลท' },
     { label:'พาเลท 7"×9"',                      unit:'Pallet',      fn: d=>toNum(d.pl_7x9),                          grp:'🪵 พาเลท' },
     { label:'พาเลท 5"×8"',                      unit:'Pallet',      fn: d=>toNum(d.pl_5x8),                          grp:'🪵 พาเลท' },
-    { label:'พาเลท รวม',                         unit:'Pallet',      fn: d=>['pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8'].reduce((s,f)=>s+toNum(d[f]),0), grp:'🪵 พาเลท' },
+    { label:'พาเลท 6"×16"',                      unit:'Pallet',      fn: d=>toNum(d.pl_6x16),                          grp:'🪵 พาเลท' },
+    { label:'พาเลท รวม',                         unit:'Pallet',      fn: d=>['pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_6x16'].reduce((s,f)=>s+toNum(d[f]),0), grp:'🪵 พาเลท' },
     // คลัง FG
     { label:'เข้าคลัง FG รวม',                  unit:'บาน',       fn: d=>toNum(d.wh_in),                           grp:'📦 คลัง FG' },
     { label:'เข้าคลัง Ag',                       unit:'บาน',       fn: d=>toNum(d.wh_in_ag),                        grp:'📦 คลัง FG' },
