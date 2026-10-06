@@ -3465,6 +3465,7 @@ async function saveData() {
   FIELDS.forEach(id => { const el = document.getElementById(id); if (el) data[id] = el.value.replace(/,/g,''); });
   // Always cache locally first
   localStorage.setItem('door_' + currentIso, JSON.stringify(data));
+  try { Object.keys(_wkMonthCache).forEach(k => delete _wkMonthCache[k]); } catch(e) {}  // ให้หน้าเปรียบเทียบสัปดาห์โหลดค่าใหม่
   // Push to Google Apps Script if configured (no-cors = fire and forget)
   if (GAS_READY) {
     try {
@@ -4262,21 +4263,27 @@ function monthWeeks(year, month) {
   return weeks;
 }
 
+// โหลดข้อมูลทั้งเดือนครั้งเดียว (1 คำขอต่อเดือน) แล้วใช้ร่วมกันทุกสัปดาห์
+// เดิมยิงคำขอไป Cloud ทีละวัน (~30 คำขอต่อการเปิดหน้า 1 ครั้ง) ทำให้โหลดช้ามาก
+const _wkMonthCache = {};   // { '2026-09': { t: เวลาที่โหลด, p: Promise ของข้อมูลเดือนนั้น } }
+function _wkMonthData(ym) {
+  const c = _wkMonthCache[ym];
+  if (c && Date.now() - c.t < 60000) return c.p;      // ใช้ซ้ำภายใน 1 นาที
+  const p = getMonthData('door_' + ym).catch(() => ({}));
+  _wkMonthCache[ym] = { t: Date.now(), p };
+  return p;
+}
 async function getWeekData(dates) {
-  return Promise.all(dates.map(async iso => {
-    if (GAS_READY) {
-      try {
-        const resp = await fetch(`${GAS_URL}?action=get&key=${iso}`);
-        const result = await resp.json();
-        if (result.ok && result.data) {
-          localStorage.setItem('door_' + iso, JSON.stringify(result.data));
-          return { iso, data: result.data };
-        }
-      } catch(e) {}
+  const months = [...new Set(dates.map(iso => iso.slice(0, 7)))];
+  const maps = {};
+  await Promise.all(months.map(async ym => { maps[ym] = await _wkMonthData(ym); }));
+  return dates.map(iso => {
+    let data = (maps[iso.slice(0, 7)] || {})[iso] || null;
+    if (!data) {
+      try { const raw = localStorage.getItem('door_' + iso); if (raw) data = JSON.parse(raw); } catch(e) {}
     }
-    const raw = localStorage.getItem('door_' + iso);
-    return { iso, data: raw ? JSON.parse(raw) : null };
-  }));
+    return { iso, data };
+  });
 }
 
 function sumWeek(days) {
