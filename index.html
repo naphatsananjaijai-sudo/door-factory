@@ -1175,6 +1175,27 @@ html, body { max-width: 100%; overflow-x: hidden; }
   .welcome-title { font-size: 23px; }
   .welcome-btn { padding: 14px 26px; font-size: 15px; }
 }
+
+/* ══ มือถือ: แถบด้านบน 2 แถว กันปุ่ม/ช่องวันที่ซ้อนกัน ══
+   แถว 1: เมนู · โลโก้ · รีเฟรช · เข้าสู่ระบบ
+   แถว 2: ◀ วันที่ ▶ (เต็มความกว้าง) */
+@media (max-width: 700px) {
+  .topbar {
+    flex-wrap: wrap !important; height: auto !important; min-height: 0 !important;
+    overflow: visible !important; padding: 8px 12px !important; gap: 8px 10px !important;
+  }
+  .topbar > * { flex-shrink: 0 !important; min-width: auto !important; }
+  .topbar-logo { flex: 1 1 0 !important; min-width: 0 !important; overflow: hidden; }
+  .topbar-logo-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topbar-spacer { display: none !important; }
+  .topbar .date-input-wrap {
+    order: 20; flex: 1 1 100% !important; justify-content: center; gap: 10px;
+  }
+  .topbar #date-input { flex: 1 1 0 !important; max-width: 200px; width: 0 !important; min-width: 0 !important; text-align: center; }
+  .topbar .date-nav-btn { width: 38px !important; height: 38px !important; font-size: 14px !important; flex-shrink: 0; }
+  #auth-btn { max-width: 140px; }
+  .sidebar { top: var(--tb-h, 108px) !important; height: calc(100dvh - var(--tb-h, 108px)) !important; }
+}
 </style>
 </head>
 <body>
@@ -4544,7 +4565,9 @@ async function buildMCompare() {
   applyWallMode();
 }
 
-async function buildWeekly() {
+let _wkBuildToken = 0;
+// _cloudData: ข้อมูลล่าสุดจาก Cloud ที่โหลดเสร็จแล้ว (ใช้ตอนวาดซ้ำรอบสอง)
+async function buildWeekly(_cloudData) {
   const el = document.getElementById('week-input');
   const iso = displayToIso(el.value);
   if (!iso) { el.style.borderColor='#e74c3c'; return; }
@@ -4625,7 +4648,31 @@ async function buildWeekly() {
   ];
 
   const allWeekDates = monthWeeks(year, month);
-  const weeksData    = await Promise.all(allWeekDates.map(dates => getWeekData(dates)));
+  // แสดงข้อมูลที่มีอยู่ในเครื่องทันที (ไม่ต้องรอ Cloud) แล้วโหลดจาก Cloud ตามหลัง
+  // ถ้า Cloud มีค่าที่ต่างจากในเครื่อง ค่อยวาดหน้าใหม่อีกรอบ
+  let weeksData;
+  if (Array.isArray(_cloudData)) {
+    weeksData = _cloudData;
+  } else {
+    const localWeeks = allWeekDates.map(dates => dates.map(iso => {
+      let data = null;
+      try { const raw = localStorage.getItem('door_' + iso); if (raw) data = JSON.parse(raw); } catch(e) {}
+      return { iso, data };
+    }));
+    const token = ++_wkBuildToken;
+    if (GAS_READY && localWeeks.some(w => w.some(d => d.data))) {
+      weeksData = localWeeks;
+      Promise.all(allWeekDates.map(dates => getWeekData(dates))).then(fresh => {
+        if (token !== _wkBuildToken) return;                               // ผู้ใช้เปลี่ยนเดือนไปแล้ว
+        if (JSON.stringify(fresh) === JSON.stringify(localWeeks)) return;  // ข้อมูลเหมือนเดิม ไม่ต้องวาดใหม่
+        const pg = document.getElementById('page-weekly');
+        if (pg && !pg.classList.contains('active')) return;
+        buildWeekly(fresh);
+      }).catch(() => {});
+    } else {
+      weeksData = await Promise.all(allWeekDates.map(dates => getWeekData(dates)));
+    }
+  }
 
   const weekCards = weeksData.map((days, wi) => {
     const hasDays = days.filter(d => d.data).length;
@@ -5307,5 +5354,13 @@ function _applyImportCode(raw, fromHash) {
   </div>
 </div>
 
+<script>
+/* ความสูงแถบด้านบน (มือถือเป็น 2 แถว) → ให้เมนูด้านข้างเริ่มต่อจากแถบพอดี */
+(function(){
+  function syncTb(){ var t=document.querySelector('.topbar'); if(t) document.documentElement.style.setProperty('--tb-h', t.offsetHeight+'px'); }
+  window.addEventListener('resize', syncTb); window.addEventListener('load', syncTb);
+  document.addEventListener('DOMContentLoaded', syncTb); setTimeout(syncTb, 500);
+})();
+</script>
 </body>
 </html>
