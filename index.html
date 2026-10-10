@@ -1330,7 +1330,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   </button>
   <button class="nav-item admin-only-nav" data-dept="blade8" onclick="goPage('blade8',this)">
     <span class="nav-icon">⚙️</span> โรง 8 ใบ
-    <span class="nav-badge">OC 30</span>
+    <span class="nav-badge">OC 26</span>
   </button>
   <button class="nav-item admin-only-nav" data-dept="frame" onclick="goPage('frame',this)">
     <span class="nav-icon">🔨</span> ยิงโครง
@@ -1704,7 +1704,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   <div class="page" id="page-blade8">
     <div class="page-header">
       <div><div class="page-title">⚙️ โรง 8 ใบ</div></div>
-      <span class="oc-chip">👷 OC 30 คน</span>
+      <span class="oc-chip">👷 OC 26 คน</span>
     </div>
 
     <!-- 3.1 Stock -->
@@ -1824,10 +1824,10 @@ html, body { max-width: 100%; overflow-x: hidden; }
 
     <div class="manpower-strip section-gap">
       <span class="mp-icon">👷</span>
-      <div class="mp-info"><div class="mp-label">กำลังคน</div><div class="mp-number" id="b8_oc_v">0</div><div class="mp-oc">OC 30 คน</div></div>
+      <div class="mp-info"><div class="mp-label">กำลังคน</div><div class="mp-number" id="b8_oc_v">0</div><div class="mp-oc">OC 26 คน</div></div>
       <div class="mp-bar-area">
-        <input class="mp-input" type="number" id="b8_oc" placeholder="กรอกจำนวนคน" min="0" max="30" oninput="updOC('b8_oc',30,'b8_oc_v','b8_ocp','b8_ocb')">
-        <div class="progress-meta"><span>Actual vs OC 30</span><span class="progress-pct" id="b8_ocp">0%</span></div>
+        <input class="mp-input" type="number" id="b8_oc" placeholder="กรอกจำนวนคน" min="0" max="26" oninput="updOC('b8_oc',26,'b8_oc_v','b8_ocp','b8_ocb')">
+        <div class="progress-meta"><span>Actual vs OC 26</span><span class="progress-pct" id="b8_ocp">0%</span></div>
         <div class="progress-bg"><div class="progress-fill" id="b8_ocb" style="width:0%"></div></div>
       </div>
     </div>
@@ -2520,7 +2520,7 @@ const MANPOWER_DEPTS = [
   { key: 's1',  icon: '🪵', name: 'โรงเลื่อยไทรน้อย',   oc: 50 },
   { key: 's2',  icon: '🪵', name: 'โรงเลื่อยปราจีน',     oc: 17 },
   { key: 'dry', icon: '🌡️', name: 'โรงอบ',              oc: 5  },
-  { key: 'b8',  icon: '⚙️', name: 'โรง 8 ใบ',            oc: 30 },
+  { key: 'b8',  icon: '⚙️', name: 'โรง 8 ใบ',            oc: 26 },
   { key: 'p1',  icon: '🔨', name: 'ยิงโครงกระดาษ',       oc: 20 },
   { key: 'bf',  icon: '🔨', name: 'ยิงโครงไม้',          oc: 10 },
   { key: 'p2',  icon: '🔥', name: 'อัดร้อน',             oc: 11 },
@@ -3164,7 +3164,7 @@ const OC_DEF = [
   {label:'โรงเลื่อย ไทรน้อย', oc:50, ids:['s1_oc']},
   {label:'โรงเลื่อย ปราจีน', oc:17, ids:['s2_oc']},
   {label:'โรงอบ', oc:5, ids:['dry_oc']},
-  {label:'โรง 8 ใบ', oc:30, ids:['b8_oc']},
+  {label:'โรง 8 ใบ', oc:26, ids:['b8_oc']},
   {label:'ยิงโครง', oc:30, ids:['p1_oc','bf_oc']},
   {label:'อัดร้อน/เย็น', oc:14, ids:['p2_oc','p3_oc']},
   {label:'CTS & คัดเกรด', oc:25, ids:['cts_oc']},
@@ -3377,7 +3377,7 @@ function updateOverview() {
         {name:'ยอดต่อรวม', color:'#7c3aed', fields:['bj_6','bj_45','bj_3','bj_fj']},
         {name:'เป้า/วัน', color:'#cbd5e1', constVal:tg('bj_total')},
       ], {title:'ยอดต่อรายวัน เทียบเป้า', unit:'pcs.', target:tg('bj_total'), targetAsBar:true}),
-      b8t, 30, {l:'ยอดต่อรวมวันนี้', v:g('bj_6')+g('bj_45')+g('bj_3')+g('bj_fj'), u:'pcs.', tk:'bj_total'}),
+      b8t, 26, {l:'ยอดต่อรวมวันนี้', v:g('bj_6')+g('bj_45')+g('bj_3')+g('bj_fj'), u:'pcs.', tk:'bj_total'}),
 
     C('🔨','ยิงโครง','#db2777','linear-gradient(135deg,#fdf2f8,#fce7f3)','#fbcfe8',
       R('ยิงโครงกระดาษ', g('p1_frame'), 'pcs.', {vc:'#ea580c', tk:'p1_frame'}) +
@@ -3710,7 +3710,7 @@ function _applyLoadedData(data) {
   calcWhSum(); calcBkKSum(); calcSaw1Total(); calcCutRate(); calcWaste(); calcSawMonthlyAvg();
   ['s1_oc','s2_oc','dry_oc','b8_oc','bf_oc','p1_oc','p2_oc','p3_oc','cts_oc','pl_oc','wh_oc'].forEach(id => {
     const el = document.getElementById(id); if (!el) return;
-    const maps = {'s1_oc':[50,'s1_oc_v','s1_ocp','s1_ocb'],'s2_oc':[17,'s2_oc_v','s2_ocp','s2_ocb'],'dry_oc':[5,'dry_oc_v','dry_ocp','dry_ocb'],'b8_oc':[30,'b8_oc_v','b8_ocp','b8_ocb'],'bf_oc':[10,'bf_oc_v','bf_ocp','bf_ocb'],'p1_oc':[20,'p1_oc_v','p1_ocp','p1_ocb'],'p2_oc':[11,'p2_oc_v','p2_ocp','p2_ocb'],'p3_oc':[3,'p3_oc_v','p3_ocp','p3_ocb'],'cts_oc':[25,'cts_oc_v','cts_ocp','cts_ocb'],'pl_oc':[6,'pl_oc_v','pl_ocp','pl_ocb'],'wh_oc':[6,'wh_oc_v','wh_ocp','wh_ocb']};
+    const maps = {'s1_oc':[50,'s1_oc_v','s1_ocp','s1_ocb'],'s2_oc':[17,'s2_oc_v','s2_ocp','s2_ocb'],'dry_oc':[5,'dry_oc_v','dry_ocp','dry_ocb'],'b8_oc':[26,'b8_oc_v','b8_ocp','b8_ocb'],'bf_oc':[10,'bf_oc_v','bf_ocp','bf_ocb'],'p1_oc':[20,'p1_oc_v','p1_ocp','p1_ocb'],'p2_oc':[11,'p2_oc_v','p2_ocp','p2_ocb'],'p3_oc':[3,'p3_oc_v','p3_ocp','p3_ocb'],'cts_oc':[25,'cts_oc_v','cts_ocp','cts_ocb'],'pl_oc':[6,'pl_oc_v','pl_ocp','pl_ocb'],'wh_oc':[6,'wh_oc_v','wh_ocp','wh_ocb']};
     const m = maps[id]; if(m) updOC(id,...m);
   });
   [['p2_hot',2000,'p2hp','p2hb'],['p3_cold',160,'p3cp','p3cb'],['cts_wrap',1300,'ctwp','ctwb'],['p1_frame',2000,'p1fp','p1fb'],['bf_w',300,'bf_wp','bf_wb'],['bf_m',0,'bf_mp','bf_mb'],['bs_h1',4000,'bs_h1p','bs_h1b'],['bs_k1',4000,'bs_k1p','bs_k1b']].forEach(([a,b,c,d]) => calcProg(a,b,c,d));
@@ -3994,7 +3994,7 @@ async function buildMonthly() {
         {l:'ไม้หัว (รวม)',v:fmtN(tot.bs_h1,0),tk:'bs_h1',u:'pcs.'},
         {l:'ไม้หัว (เบญ-ยาง)',v:fmtN(tot.bs_h1_ben,0),u:'pcs.'},
         {l:'ไม้หัว มอก.',v:fmtN(tot.bs_h1_mok,0),u:'pcs.'},
-        {l:'เฉลี่ยกำลังคน (8 ใบ)',v:daysWithData?fmtN(tot.b8_oc/daysWithData,0):'—',u:`คน / OC 30`},
+        {l:'เฉลี่ยกำลังคน (8 ใบ)',v:daysWithData?fmtN(tot.b8_oc/daysWithData,0):'—',u:`คน / OC 26`},
       ]
     },
     {
@@ -4848,7 +4848,7 @@ const DEPT_LIST = [
   { id: 'saw1',      icon: '🪵', name: 'โรงเลื่อยไทรน้อย',   oc: 50, code: '1001' },
   { id: 'saw2',      icon: '🪵', name: 'โรงเลื่อยปราจีน',    oc: 17, code: '1002' },
   { id: 'dry',       icon: '🌡️', name: 'โรงอบ',              oc: 5,  code: '1003' },
-  { id: 'blade8',    icon: '⚙️', name: 'โรง 8 ใบ',           oc: 30, code: '6793' },
+  { id: 'blade8',    icon: '⚙️', name: 'โรง 8 ใบ',           oc: 26, code: '6793' },
   { id: 'frame',     icon: '🔨', name: 'ยิงโครง',            oc: 30, code: '6793' },
   { id: 'press',     icon: '🔥', name: 'อัดร้อน/อัดเย็น',     oc: 14, code: '1006' },
   { id: 'cts',       icon: '✂️', name: 'CTS & คัดเกรด',       oc: 25, code: '8931' },
