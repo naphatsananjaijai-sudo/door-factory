@@ -1318,7 +1318,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   <div class="sidebar-section-label admin-only-nav" id="prod-section-label" style="margin-top:8px;">การผลิต</div>
   <button class="nav-item admin-only-nav" data-dept="saw1" onclick="goPage('saw1',this)">
     <span class="nav-icon">🪵</span> โรงเลื่อยไทรน้อย
-    <span class="nav-badge">OC 46</span>
+    <span class="nav-badge">OC 50</span>
   </button>
   <button class="nav-item admin-only-nav" data-dept="saw2" onclick="goPage('saw2',this)">
     <span class="nav-icon">🪵</span> โรงเลื่อยปราจีน
@@ -1518,7 +1518,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
         <div class="page-title">🪵 โรงเลื่อยไทรน้อย</div>
         <div class="page-subtitle">ยอดเข้าเลื่อย · ยอดเลื่อย · กำลังคน</div>
       </div>
-      <span class="oc-chip">👷 OC 46 คน</span>
+      <span class="oc-chip">👷 OC 50 คน</span>
     </div>
 
     <div class="card">
@@ -1577,11 +1577,11 @@ html, body { max-width: 100%; overflow-x: hidden; }
         <div class="mp-info">
           <div class="mp-label">กำลังคน</div>
           <div class="mp-number" id="s1_oc_v">0</div>
-          <div class="mp-oc">OC 46 คน</div>
+          <div class="mp-oc">OC 50 คน</div>
         </div>
         <div class="mp-bar-area">
-          <input class="mp-input" type="number" id="s1_oc" placeholder="กรอกจำนวนคนที่ทำงานจริง" min="0" max="46" oninput="updOC('s1_oc',46,'s1_oc_v','s1_ocp','s1_ocb')">
-          <div class="progress-meta"><span>Actual vs OC 46</span><span class="progress-pct" id="s1_ocp">0%</span></div>
+          <input class="mp-input" type="number" id="s1_oc" placeholder="กรอกจำนวนคนที่ทำงานจริง" min="0" max="50" oninput="updOC('s1_oc',50,'s1_oc_v','s1_ocp','s1_ocb')">
+          <div class="progress-meta"><span>Actual vs OC 50</span><span class="progress-pct" id="s1_ocp">0%</span></div>
           <div class="progress-bg"><div class="progress-fill" id="s1_ocb" style="width:0%"></div></div>
         </div>
       </div>
@@ -2517,7 +2517,7 @@ function updOC(inId, oc, valId, pctId, barId) {
    ของแต่ละแผนกอยู่เบื้องหลัง เพื่อให้ข้อมูลตรงกันทุกที่ในระบบ
 ══════════════════════════════════════════════════ */
 const MANPOWER_DEPTS = [
-  { key: 's1',  icon: '🪵', name: 'โรงเลื่อยไทรน้อย',   oc: 46 },
+  { key: 's1',  icon: '🪵', name: 'โรงเลื่อยไทรน้อย',   oc: 50 },
   { key: 's2',  icon: '🪵', name: 'โรงเลื่อยปราจีน',     oc: 17 },
   { key: 'dry', icon: '🌡️', name: 'โรงอบ',              oc: 5  },
   { key: 'b8',  icon: '⚙️', name: 'โรง 8 ใบ',            oc: 30 },
@@ -3161,7 +3161,7 @@ function toggleWallMode() {
 
 /* ── Overview KPIs ── */
 const OC_DEF = [
-  {label:'โรงเลื่อย ไทรน้อย', oc:46, ids:['s1_oc']},
+  {label:'โรงเลื่อย ไทรน้อย', oc:50, ids:['s1_oc']},
   {label:'โรงเลื่อย ปราจีน', oc:17, ids:['s2_oc']},
   {label:'โรงอบ', oc:5, ids:['dry_oc']},
   {label:'โรง 8 ใบ', oc:30, ids:['b8_oc']},
@@ -3334,7 +3334,7 @@ function updateOverview() {
         {name:'ยอดเลื่อยรวม', color:'#16a34a', fields:['s1_door','s1_pal']},
         {name:'เป้า/วัน', color:'#cbd5e1', constVal:tg('s1_total')},
       ], {title:'ยอดเลื่อยรายวัน เทียบเป้า', unit:'Cu.ft.', target:tg('s1_total'), targetAsBar:true}),
-      g('s1_oc'), 46, {l:'ยอดเลื่อยรวมวันนี้', v:s1t, u:'Cu.ft.', dec:2, tk:'s1_total'}),
+      g('s1_oc'), 50, {l:'ยอดเลื่อยรวมวันนี้', v:s1t, u:'Cu.ft.', dec:2, tk:'s1_total'}),
 
     C('🪵','โรงเลื่อยปราจีน','#ea580c','linear-gradient(135deg,#fff7ed,#ffedd5)','#fdba74',
       R('เข้าเลื่อย', g('s2_enter'), 'Ton.', {tk:'s2_enter'}) +
@@ -3710,7 +3710,7 @@ function _applyLoadedData(data) {
   calcWhSum(); calcBkKSum(); calcSaw1Total(); calcCutRate(); calcWaste(); calcSawMonthlyAvg();
   ['s1_oc','s2_oc','dry_oc','b8_oc','bf_oc','p1_oc','p2_oc','p3_oc','cts_oc','pl_oc','wh_oc'].forEach(id => {
     const el = document.getElementById(id); if (!el) return;
-    const maps = {'s1_oc':[46,'s1_oc_v','s1_ocp','s1_ocb'],'s2_oc':[17,'s2_oc_v','s2_ocp','s2_ocb'],'dry_oc':[5,'dry_oc_v','dry_ocp','dry_ocb'],'b8_oc':[30,'b8_oc_v','b8_ocp','b8_ocb'],'bf_oc':[10,'bf_oc_v','bf_ocp','bf_ocb'],'p1_oc':[20,'p1_oc_v','p1_ocp','p1_ocb'],'p2_oc':[11,'p2_oc_v','p2_ocp','p2_ocb'],'p3_oc':[3,'p3_oc_v','p3_ocp','p3_ocb'],'cts_oc':[25,'cts_oc_v','cts_ocp','cts_ocb'],'pl_oc':[6,'pl_oc_v','pl_ocp','pl_ocb'],'wh_oc':[6,'wh_oc_v','wh_ocp','wh_ocb']};
+    const maps = {'s1_oc':[50,'s1_oc_v','s1_ocp','s1_ocb'],'s2_oc':[17,'s2_oc_v','s2_ocp','s2_ocb'],'dry_oc':[5,'dry_oc_v','dry_ocp','dry_ocb'],'b8_oc':[30,'b8_oc_v','b8_ocp','b8_ocb'],'bf_oc':[10,'bf_oc_v','bf_ocp','bf_ocb'],'p1_oc':[20,'p1_oc_v','p1_ocp','p1_ocb'],'p2_oc':[11,'p2_oc_v','p2_ocp','p2_ocb'],'p3_oc':[3,'p3_oc_v','p3_ocp','p3_ocb'],'cts_oc':[25,'cts_oc_v','cts_ocp','cts_ocb'],'pl_oc':[6,'pl_oc_v','pl_ocp','pl_ocb'],'wh_oc':[6,'wh_oc_v','wh_ocp','wh_ocb']};
     const m = maps[id]; if(m) updOC(id,...m);
   });
   [['p2_hot',2000,'p2hp','p2hb'],['p3_cold',160,'p3cp','p3cb'],['cts_wrap',1300,'ctwp','ctwb'],['p1_frame',2000,'p1fp','p1fb'],['bf_w',300,'bf_wp','bf_wb'],['bf_m',0,'bf_mp','bf_mb'],['bs_h1',4000,'bs_h1p','bs_h1b'],['bs_k1',4000,'bs_k1p','bs_k1b']].forEach(([a,b,c,d]) => calcProg(a,b,c,d));
@@ -3946,7 +3946,7 @@ async function buildMonthly() {
         {l:'ไม้เลื่อยส่งทำพาเลทและงานทั่วไป',v:fmtN(tot.s1_pal,0),tk:'s1_pal',u:'Cu.ft.'},
         {l:'รวมยอดเลื่อย',v:fmtN(tot.s1_door+tot.s1_pal,0),tk:'s1_total',u:'Cu.ft.'},
         {l:'เฉลี่ย/วัน',v:daysWithData?fmtN((tot.s1_door+tot.s1_pal)/daysWithData,2):'—',tk:'s1_avg',perDay:true,u:'Cu.ft./วัน', highlight:true},
-        {l:'เฉลี่ยกำลังคน',v:daysWithData?fmtN(tot.s1_oc/daysWithData,0):'—',u:`คน / OC 46`},
+        {l:'เฉลี่ยกำลังคน',v:daysWithData?fmtN(tot.s1_oc/daysWithData,0):'—',u:`คน / OC 50`},
       ]
     },
     {
@@ -4845,7 +4845,7 @@ let isAdmin = false;
    ได้เลย (เป็นข้อความธรรมดา ไม่ต้องเข้ารหัสอะไร) แล้วอัปโหลดไฟล์ทับของเดิม
 ══════════════════════════════════════════════════ */
 const DEPT_LIST = [
-  { id: 'saw1',      icon: '🪵', name: 'โรงเลื่อยไทรน้อย',   oc: 46, code: '1001' },
+  { id: 'saw1',      icon: '🪵', name: 'โรงเลื่อยไทรน้อย',   oc: 50, code: '1001' },
   { id: 'saw2',      icon: '🪵', name: 'โรงเลื่อยปราจีน',    oc: 17, code: '1002' },
   { id: 'dry',       icon: '🌡️', name: 'โรงอบ',              oc: 5,  code: '1003' },
   { id: 'blade8',    icon: '⚙️', name: 'โรง 8 ใบ',           oc: 30, code: '6793' },
