@@ -1808,16 +1808,16 @@ html, body { max-width: 100%; overflow-x: hidden; }
         </div>
         <div class="metric-item">
           <div class="metric-item-label">ไม้ข้าง <span class="target-chip">4,000 pcs.</span></div>
-          <div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--cyan-500)" type="number" id="bs_k1" placeholder="0" oninput="calcProg('bs_k1',4000,'bs_k1p','bs_k1b')"><span class="metric-unit">pcs.</span></div>
+          <div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--cyan-500);background:#ecfeff;cursor:default;font-weight:700" type="text" id="bs_k1" placeholder="—" readonly><span class="metric-unit">รวม</span></div>
           <div class="progress-wrap"><div class="progress-meta"><span>vs 4,000</span><span class="progress-pct" id="bs_k1p">0%</span></div><div class="progress-bg"><div class="progress-fill" id="bs_k1b" style="width:0%"></div></div></div>
         </div>
         <div class="metric-item">
           <div class="metric-item-label">ไม้ข้าง (เบญ-ยาง)</div>
-          <div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--cyan-500)" type="number" id="bs_k2" placeholder="0"><span class="metric-unit">pcs.</span></div>
+          <div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--cyan-500)" type="number" id="bs_k2" placeholder="0" oninput="calcBsK1Sum()"><span class="metric-unit">pcs.</span></div>
         </div>
         <div class="metric-item">
           <div class="metric-item-label">ไม้ LVL</div>
-          <div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--cyan-500)" type="number" id="bs_lvl" placeholder="0"><span class="metric-unit">pcs.</span></div>
+          <div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--cyan-500)" type="number" id="bs_lvl" placeholder="0" oninput="calcBsK1Sum()"><span class="metric-unit">pcs.</span></div>
         </div>
       </div>
     </div>
@@ -2659,6 +2659,15 @@ function calcBsH1Sum() {
   const el = document.getElementById('bs_h1');
   if (el) el.value = total > 0 ? total.toLocaleString('en-US') : '';
   calcProg('bs_h1', 4000, 'bs_h1p', 'bs_h1b');
+  updateOverview();
+}
+
+/* ── ยอดซอย ไม้ข้าง รวม (เบญ-ยาง + LVL) ── */
+function calcBsK1Sum() {
+  const total = g('bs_k2') + g('bs_lvl');
+  const el = document.getElementById('bs_k1');
+  if (el) el.value = total > 0 ? total.toLocaleString('en-US') : '';
+  calcProg('bs_k1', 4000, 'bs_k1p', 'bs_k1b');
   updateOverview();
 }
 
