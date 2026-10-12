@@ -1843,10 +1843,20 @@ html, body { max-width: 100%; overflow-x: hidden; }
 
     <div class="card">
       <div class="card-title"><span class="title-bar" style="background:var(--orange-500)"></span>ยอดยิงโครงกระดาษ <span class="target-chip" style="margin-left:4px;">เป้า 2,000 pcs.</span></div>
-      <div class="metric-item" style="max-width:340px;">
+      <div class="g3">
+      <div class="metric-item">
         <div class="metric-item-label">ยอดยิงโครงกระดาษ</div>
         <div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--orange-500)" type="number" id="p1_frame" placeholder="0" oninput="calcProg('p1_frame',2000,'p1fp','p1fb')"><span class="metric-unit">pcs.</span></div>
         <div class="progress-wrap"><div class="progress-meta"><span>vs เป้า 2,000</span><span class="progress-pct" id="p1fp">0%</span></div><div class="progress-bg"><div class="progress-fill" id="p1fb" style="width:0%"></div></div></div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-item-label">ยอดต่อกระดาษรังผึ้ง</div>
+        <div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--orange-500)" type="number" id="p1_honey" placeholder="0" oninput="updateOverview()"><span class="metric-unit">pcs.</span></div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-item-label">ยอดต่อไม้หัว+กระดาษรังผึ้ง</div>
+        <div class="metric-item-input-row"><input class="metric-item-input" style="color:var(--orange-500)" type="number" id="p1_hhoney" placeholder="0" oninput="updateOverview()"><span class="metric-unit">pcs.</span></div>
+      </div>
       </div>
       <div class="manpower-strip section-gap" style="background:linear-gradient(135deg,#fff7ed,#ffedd5);border-color:#fed7aa;">
         <span class="mp-icon">👷</span>
@@ -3198,7 +3208,7 @@ const FMT_FIELDS = [
   'bj_6','bj_45','bj_3','bj_fj',
   'bs_h1','bs_h1_ben','bs_h1_mok','bs_k1','bs_k2','bs_mok','bs_lvl',
   'bf_w','bf_m',
-  'p1_frame','p1_frame_st','bf_w_st','p1_frame_st_ag','p1_frame_st_cp','bf_w_st_ag','bf_w_st_cp','p2_hot','p2_down','p3_cold',
+  'p1_frame','p1_honey','p1_hhoney','p1_frame_st','bf_w_st','p1_frame_st_ag','p1_frame_st_cp','bf_w_st_ag','bf_w_st_cp','p2_hot','p2_down','p3_cold',
   'cts_sloy','cts_wrap','w_hot','w_cold','w_sloy',
   'pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_6x16',
   'wh_in_ag','wh_in_cp','wh_out_ag','wh_out_cp','wh_st'
@@ -3381,6 +3391,8 @@ function updateOverview() {
 
     C('🔨','ยิงโครง','#db2777','linear-gradient(135deg,#fdf2f8,#fce7f3)','#fbcfe8',
       R('ยิงโครงกระดาษ', g('p1_frame'), 'pcs.', {vc:'#ea580c', tk:'p1_frame'}) +
+      R('ต่อกระดาษรังผึ้ง', g('p1_honey'), 'pcs.', {vc:'#ea580c'}) +
+      R('ต่อไม้หัว+กระดาษรังผึ้ง', g('p1_hhoney'), 'pcs.', {vc:'#ea580c'}) +
       R('โครงไม้', g('bf_w'), 'pcs.', {vc:'#db2777', tk:'bf_w'}) +
       R('มอก.', g('bf_m'), 'pcs.', {vc:'#db2777', tk:'bf_m'}) +
       R('Stock โครงกระดาษ', g('p1_frame_st'), 'pcs.', {sm:true, vc:'#7c3aed', tk:'p1_frame_st'}) +
@@ -3471,7 +3483,7 @@ const FIELDS = [
   'bj_6','bj_45','bj_3','bj_fj',
   'bs_h1','bs_h1_ben','bs_h1_mok','bs_k1','bs_k2','bs_mok','bs_lvl',
   'bf_w','bf_m','bf_w_st','bf_w_st_ag','bf_w_st_cp','bf_oc','b8_oc',
-  'p1_frame','p1_frame_st','p1_frame_st_ag','p1_frame_st_cp','p1_oc','p2_hot','p2_oc','p2_down','p3_cold','p3_oc',
+  'p1_frame','p1_honey','p1_hhoney','p1_frame_st','p1_frame_st_ag','p1_frame_st_cp','p1_oc','p2_hot','p2_oc','p2_down','p3_cold','p3_oc',
   'cts_sloy','cts_wrap','cts_oc','w_hot','w_cold','w_sloy',
   'pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_6x16','pl_oc',
   'wh_in','wh_in_ag','wh_in_cp','wh_out','wh_out_ag','wh_out_cp','wh_st','wh_oc'
@@ -3896,7 +3908,7 @@ async function buildMonthly() {
     'bj_6','bj_45','bj_3','bj_fj',
     'bs_h1','bs_h1_ben','bs_h1_mok','bs_k1','bs_k2','bs_mok','bs_lvl',
     'b8_oc','bf_w','bf_m','bf_w_st','bf_oc',
-    'p1_frame','p1_frame_st','p1_oc','p2_hot','p2_oc','p2_down','p3_cold','p3_oc',
+    'p1_frame','p1_honey','p1_hhoney','p1_frame_st','p1_oc','p2_hot','p2_oc','p2_down','p3_cold','p3_oc',
     'cts_sloy','cts_wrap','cts_oc','w_hot','w_cold','w_sloy',
     'pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_6x16','pl_oc',
     'wh_in','wh_in_ag','wh_in_cp','wh_out','wh_out_ag','wh_out_cp','wh_st','wh_oc'];
@@ -4001,6 +4013,8 @@ async function buildMonthly() {
       icon:'🔧', title:'ยิงโครง',
       metrics:[
         {l:'ยิงโครงกระดาษ',v:fmtN(tot.p1_frame,0),tk:'p1_frame',u:'pcs.'},
+        {l:'ยอดต่อกระดาษรังผึ้ง',v:fmtN(tot.p1_honey,0),u:'pcs.'},
+        {l:'ยอดต่อไม้หัว+กระดาษรังผึ้ง',v:fmtN(tot.p1_hhoney,0),u:'pcs.'},
         {l:'ยิงโครงไม้',v:fmtN(tot.bf_w,0),tk:'bf_w',u:'pcs.'},
         {l:'ยิงโครง มอก.',v:fmtN(tot.bf_m,0),tk:'bf_m',u:'pcs.'},
         {l:'Stock โครงกระดาษ (ล่าสุด)',v:(()=>{const d=days.slice().reverse().find(({data:r})=>toNum(r.p1_frame_st)>0);return d?fmtN(toNum(d.data.p1_frame_st),0):'—';})(),raw:(()=>{const d=days.slice().reverse().find(({data:r})=>toNum(r.p1_frame_st)>0);return d?toNum(d.data.p1_frame_st):0;})(),tk:'p1_frame_st',ratio:true,u:'pcs.', highlight:true},
@@ -4204,6 +4218,8 @@ const WK_METRICS = [
   { label:'ไม้ข้าง LVL',             unit:'pcs.',   fn: d => toNum(d.bs_lvl)                                  },
   // ── ยิงโครง ──
   { label:'ยิงโครงกระดาษ',           unit:'pcs.',   fn: d => toNum(d.p1_frame)                               },
+  { label:'ยอดต่อกระดาษรังผึ้ง', unit:'pcs.', fn: d => toNum(d.p1_honey) },
+  { label:'ยอดต่อไม้หัว+กระดาษรังผึ้ง', unit:'pcs.', fn: d => toNum(d.p1_hhoney) },
   { label:'ยิงโครงไม้',              unit:'pcs.',   fn: d => toNum(d.bf_w)                                   },
   { label:'ยิงโครง มอก.',            unit:'pcs.',   fn: d => toNum(d.bf_m)                                   },
   { label:'Stock โครงกระดาษ',        unit:'pcs.',   fn: d => toNum(d.p1_frame_st)                            },
@@ -4408,7 +4424,7 @@ async function buildMCompare() {
 
   const SF = [
     's1_door','s1_pal','s2_saw',
-    'bf_w','bf_m','p1_frame','p2_hot','p2_down','p3_cold',
+    'bf_w','bf_m','p1_frame','p1_honey','p1_hhoney','p2_hot','p2_down','p3_cold',
     'cts_sloy','cts_wrap','w_hot','w_cold','w_sloy',
     'pl_3x6','pl_4x6','pl_4x8s','pl_4x8sn','pl_4x8h','pl_4x9','pl_4x10','pl_4x12','pl_7x9','pl_5x8','pl_6x16',
     'wh_in_ag','wh_in_cp','wh_out_ag','wh_out_cp'
@@ -4496,6 +4512,8 @@ async function buildMCompare() {
     ]},
     { title:'🔨 ยิงโครง', rows:[
       {l:'ยิงโครงกระดาษ', tk:'p1_frame', vC:tC.p1_frame, vP:tP.p1_frame, u:'pcs.'},
+      {l:'ยอดต่อกระดาษรังผึ้ง', vC:tC.p1_honey, vP:tP.p1_honey, u:'pcs.'},
+      {l:'ยอดต่อไม้หัว+กระดาษรังผึ้ง', vC:tC.p1_hhoney, vP:tP.p1_hhoney, u:'pcs.'},
       {l:'ยิงโครงไม้', tk:'bf_w',    vC:tC.bf_w+tC.bf_m, vP:tP.bf_w+tP.bf_m, u:'pcs.'},
       {l:'Stock โครงกระดาษ (ล่าสุด)', noPerDay:true, tk:'p1_frame_st', vC:p1StC, vP:p1StP, u:'pcs.'},
       {l:'  ↳ Ag', noPerDay:true, vC:_lastPart(curData,'p1_frame_st','_ag'), vP:_lastPart(prevData,'p1_frame_st','_ag'), u:'pcs.'},
@@ -4615,6 +4633,8 @@ async function buildWeekly(_cloudData) {
     { label:'ไม้ข้าง LVL',                       unit:'pcs.',      fn: d=>toNum(d.bs_lvl),                          grp:'⚙️ โรง 8 ใบ' },
     // ยิงโครง
     { label:'ยิงโครงกระดาษ', tk:'p1_frame',                     unit:'pcs.',      fn: d=>toNum(d.p1_frame),                        grp:'🔧 ยิงโครง' },
+    { label:'ยอดต่อกระดาษรังผึ้ง', unit:'pcs.', fn: d=>toNum(d.p1_honey), grp:'🔧 ยิงโครง' },
+    { label:'ยอดต่อไม้หัว+กระดาษรังผึ้ง', unit:'pcs.', fn: d=>toNum(d.p1_hhoney), grp:'🔧 ยิงโครง' },
     { label:'ยิงโครงไม้', tk:'bf_w',                        unit:'pcs.',      fn: d=>toNum(d.bf_w),                            grp:'🔧 ยิงโครง' },
     { label:'ยิงโครง มอก.', tk:'bf_m',                      unit:'pcs.',      fn: d=>toNum(d.bf_m),                            grp:'🔧 ยิงโครง' },
     { label:'Stock โครงกระดาษ (ล่าสุด)', tk:'p1_frame_st', isLast:true,      unit:'pcs.',      fn: d=>toNum(d.p1_frame_st),                     grp:'🔧 ยิงโครง' },
