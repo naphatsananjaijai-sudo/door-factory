@@ -1,6 +1,63 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+<script>
+/* ══ หมดเวลาเข้าสู่ระบบ: ไม่มีการใช้งาน (เปิดจอทิ้งไว้) เกิน 20 นาที ต้องใส่รหัสใหม่ ══
+   ใช้กับรหัสดูรายงาน / รหัส Admin / รหัสแผนก  (เปลี่ยนเวลาได้ที่ LOGIN_TTL_MIN)
+   - ขยับเมาส์ / แตะจอ / พิมพ์ / เลื่อนหน้า = ยังใช้งานอยู่ นับเวลาใหม่
+   - เปิดจอทิ้งไว้เกิน 20 นาที → ล็อกกลับไปหน้าแรกเอง ต้องใส่รหัสใหม่
+   - ปิดเว็บไปแล้วกลับมาเปิด/รีเฟรชหลัง 20 นาที → ต้องใส่รหัสใหม่เช่นกัน */
+var LOGIN_TTL_MIN = 20;
+var LOGIN_AT_KEY = 'door_login_at';   // เวลาที่ใช้งานล่าสุด
+function _loggedIn() {
+  try {
+    return localStorage.getItem('door_view_ok') !== null ||
+           sessionStorage.getItem('door_admin_session') === '1' ||
+           !!sessionStorage.getItem('door_current_dept');
+  } catch (e) { return false; }
+}
+function _clearLogin() {
+  try {
+    localStorage.removeItem('door_view_ok');
+    localStorage.removeItem(LOGIN_AT_KEY);
+    sessionStorage.removeItem('door_admin_session');
+    sessionStorage.removeItem('door_current_dept');
+  } catch (e) {}
+}
+function _idleExpired() {
+  try {
+    var at = Number(localStorage.getItem(LOGIN_AT_KEY) || 0);
+    return !at || Date.now() - at > LOGIN_TTL_MIN * 60000;
+  } catch (e) { return true; }
+}
+function markLoginTime() { try { localStorage.setItem(LOGIN_AT_KEY, String(Date.now())); } catch (e) {} }
+// ตอนเปิด/รีเฟรชหน้า: ถ้าไม่ได้ใช้งานเกินเวลา ล้างการเข้าสู่ระบบ
+if (_idleExpired()) _clearLogin();
+// มีการใช้งาน → นับเวลาใหม่ (บันทึกไม่เกินทุก 15 วินาที)
+(function(){
+  var last = 0;
+  function act() {
+    var now = Date.now();
+    if (now - last < 15000) return;
+    if (!_loggedIn()) return;
+    if (_idleExpired()) { _lockNow(); return; }
+    last = now; markLoginTime();
+  }
+  ['mousemove','mousedown','keydown','touchstart','scroll','wheel'].forEach(function(ev){
+    document.addEventListener(ev, act, {passive:true, capture:true});
+  });
+  function _lockNow() {
+    _clearLogin();
+    try { var u = new URL(location.href); u.searchParams.delete('v'); location.replace(u.toString()); }
+    catch (e) { location.reload(); }
+  }
+  function check() { if (_loggedIn() && _idleExpired()) _lockNow(); }
+  setInterval(check, 30000);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) check(); });
+  window.addEventListener('focus', check);
+  window._lockNow = _lockNow;
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>โรงงานประตู</title>
@@ -2491,6 +2548,7 @@ function goPage(id, btn) {
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   if (btn) btn.classList.add('active');
+  try { sessionStorage.setItem('door_last_page', id); } catch (e) {}
   closeSidebar();
 }
 
@@ -4901,6 +4959,7 @@ let pendingDeptId = null;
 function markDeptUnlockedUI(id) {
   currentDept = id;
   sessionStorage.setItem(DEPT_UNLOCK_KEY, id);
+  markLoginTime();
   document.querySelectorAll('.nav-item[data-dept]').forEach(btn => {
     btn.classList.toggle('dept-unlocked', btn.getAttribute('data-dept') === id);
   });
@@ -5059,6 +5118,7 @@ function authSubmit() {
   if (hashStr(pw) === ADMIN_HASH) {
     isAdmin = true;
     sessionStorage.setItem(SESSION_KEY, '1');
+    markLoginTime();
     authCloseModal();
     applyMode();
   } else {
@@ -5428,7 +5488,7 @@ function _applyImportCode(raw, fromHash) {
    รหัสดูรายงาน (ถามรหัสตอนกดปุ่ม "📊 เข้าดูรายงาน" ที่หน้าแรก)
    วิธีเปลี่ยนรหัส: แก้ค่าในเครื่องหมาย ' ' ด้านล่าง แล้วอัปโหลดไฟล์ทับของเดิม
    เข้าได้ด้วย: รหัสดูรายงาน / รหัส Admin เท่านั้น (รหัสแผนกเข้าดูรายงานไม่ได้)
-   เครื่องที่ใส่รหัสถูกแล้วจะจำไว้ ไม่ต้องใส่ซ้ำ (กด "ออกจากระบบ" ของ Admin เพื่อล้าง)
+   ใส่รหัสถูกแล้วจะจำไว้ — ถ้าเปิดจอทิ้งไว้ไม่ใช้งานเกิน 20 นาที ต้องใส่รหัสใหม่ (ดู LOGIN_TTL_MIN ด้านบนสุดของไฟล์)
    เปลี่ยนรหัสเมื่อไหร่ ทุกเครื่องต้องใส่รหัสใหม่อีกครั้ง
 ══════════════════════════════════════════════════ */
 const VIEW_CODE = 'DR@@9654';
@@ -5459,6 +5519,7 @@ function viewGateSubmit() {
   }
   if (ok) {
     try { localStorage.setItem(VIEW_OK_KEY, hashStr(VIEW_CODE)); } catch (e) {}
+    markLoginTime();
     viewGateClose();
     enterDashboard();
   } else {
@@ -5467,6 +5528,27 @@ function viewGateSubmit() {
     inp.focus();
   }
 }
+
+/* ── รีเฟรชระหว่างยังเข้าสู่ระบบอยู่ (ไม่เกิน 20 นาที): ไม่ต้องใส่รหัสใหม่ กลับไปหน้าเดิมเลย ── */
+(function restoreAfterRefresh() {
+  let last = null;
+  try { last = sessionStorage.getItem('door_last_page'); } catch (e) {}
+  const reportPages = ['monthly','mcompare','weekly','overview'];
+  // เข้ามาด้วยรหัสแผนก และหน้าล่าสุดเป็นหน้าแผนกนั้น → กลับเข้าหน้าแผนก
+  if (!isAdmin && currentDept && (last === currentDept || !_viewOk())) {
+    enterDept(currentDept);
+    return;
+  }
+  // เข้าดูรายงาน/แอดมินไว้แล้ว → ข้ามหน้าแรก ไปหน้าที่เปิดอยู่ล่าสุด
+  if (_viewOk()) {
+    enterDashboard();
+    const target = (last && (isAdmin || reportPages.includes(last))) ? last : null;
+    if (target) {
+      const btn = document.querySelector('.nav-item[onclick*="goPage(\'' + target + '\'"]');
+      if (btn) btn.click();
+    }
+  }
+})();
 </script>
 </body>
 </html>
