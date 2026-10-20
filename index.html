@@ -1208,7 +1208,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
     <div class="welcome-sub">Welcome to</div>
     <div class="welcome-title">โรงงานประตู<span>DOOR FACTORY</span></div>
     <div class="welcome-desc">ระบบติดตามผลผลิตและรายงานประจำวัน<br>ทุกแผนกในที่เดียว</div>
-    <button type="button" class="welcome-btn" onclick="enterDashboard()">📊 เข้าดูรายงาน</button>
+    <button type="button" class="welcome-btn" onclick="openReports()">📊 เข้าดูรายงาน</button>
     <button type="button" class="welcome-btn welcome-btn-secondary" onclick="openProdMenu()">🏭 รายงานยอดผลิต</button>
     <div class="welcome-foot">คลิกปุ่มด้านบนเพื่อเข้าสู่แดชบอร์ด</div>
   </div>
@@ -2478,7 +2478,11 @@ function enterDashboard() {
 }
 document.addEventListener('keydown', e => {
   const w = document.getElementById('welcome-screen');
-  if (w && !w.classList.contains('hide') && (e.key === 'Enter' || e.key === ' ')) enterDashboard();
+  const g = document.getElementById('view-gate');
+  if (g && g.style.display === 'flex') return; // กำลังใส่รหัสดูรายงานอยู่
+  if (w && !w.classList.contains('hide') && (e.key === 'Enter' || e.key === ' ')) {
+    if (typeof openReports === 'function') openReports(); else enterDashboard();
+  }
 });
 
 /* ── Navigation ── */
@@ -5029,6 +5033,7 @@ function applyMode() {
 function authLogout() {
   isAdmin = false;
   sessionStorage.removeItem(SESSION_KEY);
+  try { localStorage.removeItem('door_view_ok'); } catch (e) {}
   applyMode();
   goPage('overview', document.querySelector('.nav-item'));
 }
@@ -5401,6 +5406,67 @@ function _applyImportCode(raw, fromHash) {
   window.addEventListener('resize', syncTb); window.addEventListener('load', syncTb);
   document.addEventListener('DOMContentLoaded', syncTb); setTimeout(syncTb, 500);
 })();
+</script>
+
+<!-- ══ ล็อกหน้าเว็บ: ต้องใส่รหัสก่อนเข้าดูรายงาน ══ -->
+<div id="view-gate" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(10,30,18,.72);align-items:center;justify-content:center;padding:16px;font-family:inherit;">
+  <div style="background:#fff;border-radius:18px;padding:28px 24px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.35);">
+    <div style="font-size:40px;line-height:1;">🔒</div>
+    <div style="font-size:20px;font-weight:800;color:#14301F;margin-top:10px;">โรงงานประตู</div>
+    <div style="font-size:14px;color:#4A5A4F;margin:6px 0 18px;">ใส่รหัสผ่านเพื่อเข้าดูรายงาน</div>
+    <input id="view-gate-pw" type="password" inputmode="text" autocomplete="current-password" placeholder="รหัสผ่าน"
+      style="width:100%;box-sizing:border-box;padding:12px 14px;font-size:18px;border:2px solid #DCE3D9;border-radius:12px;text-align:center;outline:none;"
+      onkeydown="if(event.key==='Enter')viewGateSubmit()">
+    <div id="view-gate-err" style="color:#dc2626;font-size:13px;min-height:18px;margin-top:6px;"></div>
+    <button onclick="viewGateSubmit()" style="width:100%;margin-top:6px;padding:12px;font-size:16px;font-weight:700;color:#fff;background:#2E7D32;border:none;border-radius:12px;cursor:pointer;">เข้าสู่ระบบ</button>
+    <button onclick="viewGateClose()" style="width:100%;margin-top:8px;padding:10px;font-size:14px;color:#4A5A4F;background:#F1F4EF;border:none;border-radius:12px;cursor:pointer;">← กลับหน้าแรก</button>
+    <div style="font-size:12px;color:#8a948d;margin-top:12px;">ใช้รหัสดูรายงาน หรือรหัส Admin</div>
+  </div>
+</div>
+<script>
+/* ══════════════════════════════════════════════════
+   รหัสดูรายงาน (ถามรหัสตอนกดปุ่ม "📊 เข้าดูรายงาน" ที่หน้าแรก)
+   วิธีเปลี่ยนรหัส: แก้ค่าในเครื่องหมาย ' ' ด้านล่าง แล้วอัปโหลดไฟล์ทับของเดิม
+   เข้าได้ด้วย: รหัสดูรายงาน / รหัส Admin เท่านั้น (รหัสแผนกเข้าดูรายงานไม่ได้)
+   เครื่องที่ใส่รหัสถูกแล้วจะจำไว้ ไม่ต้องใส่ซ้ำ (กด "ออกจากระบบ" ของ Admin เพื่อล้าง)
+   เปลี่ยนรหัสเมื่อไหร่ ทุกเครื่องต้องใส่รหัสใหม่อีกครั้ง
+══════════════════════════════════════════════════ */
+const VIEW_CODE = 'DR@@9654';
+const VIEW_OK_KEY = 'door_view_ok';
+function _viewOk() {
+  try { if (localStorage.getItem(VIEW_OK_KEY) === hashStr(VIEW_CODE)) return true; } catch (e) {}
+  return isAdmin;
+}
+// ปุ่ม "📊 เข้าดูรายงาน" — ถ้ายังไม่เคยใส่รหัสในเครื่องนี้ ให้ถามรหัสก่อน
+function openReports() {
+  if (_viewOk()) { enterDashboard(); return; }
+  const g = document.getElementById('view-gate');
+  document.getElementById('view-gate-err').textContent = '';
+  g.style.display = 'flex';
+  setTimeout(() => { const i = document.getElementById('view-gate-pw'); if (i) i.focus(); }, 80);
+}
+function viewGateClose() {
+  document.getElementById('view-gate').style.display = 'none';
+  document.getElementById('view-gate-pw').value = '';
+}
+function viewGateSubmit() {
+  const inp = document.getElementById('view-gate-pw');
+  const pw = (inp.value || '').trim();
+  let ok = false;
+  if (pw && pw === VIEW_CODE) ok = true;
+  else if (pw && hashStr(pw) === ADMIN_HASH) {
+    ok = true; isAdmin = true; sessionStorage.setItem(SESSION_KEY, '1'); applyMode();
+  }
+  if (ok) {
+    try { localStorage.setItem(VIEW_OK_KEY, hashStr(VIEW_CODE)); } catch (e) {}
+    viewGateClose();
+    enterDashboard();
+  } else {
+    document.getElementById('view-gate-err').textContent = 'รหัสผ่านไม่ถูกต้อง';
+    inp.value = '';
+    inp.focus();
+  }
+}
 </script>
 </body>
 </html>
