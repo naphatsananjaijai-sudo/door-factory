@@ -6,31 +6,32 @@
    ใช้กับรหัสดูรายงาน / รหัส Admin / รหัสแผนก  (เปลี่ยนเวลาได้ที่ LOGIN_TTL_MIN)
    - ขยับเมาส์ / แตะจอ / พิมพ์ / เลื่อนหน้า = ยังใช้งานอยู่ นับเวลาใหม่
    - เปิดจอทิ้งไว้เกิน 20 นาที → ล็อกกลับไปหน้าแรกเอง ต้องใส่รหัสใหม่
-   - ปิดเว็บไปแล้วกลับมาเปิด/รีเฟรชหลัง 20 นาที → ต้องใส่รหัสใหม่เช่นกัน */
+   - รีเฟรชภายใน 20 นาที → ไม่ต้องใส่รหัสใหม่
+   - ปิดแท็บ/ปิดเว็บไปแล้วเปิดใหม่ → ต้องใส่รหัสใหม่ทุกครั้ง (เก็บสถานะไว้แค่ในแท็บที่เปิดอยู่) */
 var LOGIN_TTL_MIN = 20;
 var LOGIN_AT_KEY = 'door_login_at';   // เวลาที่ใช้งานล่าสุด
 function _loggedIn() {
   try {
-    return localStorage.getItem('door_view_ok') !== null ||
+    return sessionStorage.getItem('door_view_ok') !== null ||
            sessionStorage.getItem('door_admin_session') === '1' ||
            !!sessionStorage.getItem('door_current_dept');
   } catch (e) { return false; }
 }
 function _clearLogin() {
   try {
-    localStorage.removeItem('door_view_ok');
-    localStorage.removeItem(LOGIN_AT_KEY);
+    sessionStorage.removeItem('door_view_ok');
+    sessionStorage.removeItem(LOGIN_AT_KEY);
     sessionStorage.removeItem('door_admin_session');
     sessionStorage.removeItem('door_current_dept');
   } catch (e) {}
 }
 function _idleExpired() {
   try {
-    var at = Number(localStorage.getItem(LOGIN_AT_KEY) || 0);
+    var at = Number(sessionStorage.getItem(LOGIN_AT_KEY) || 0);
     return !at || Date.now() - at > LOGIN_TTL_MIN * 60000;
   } catch (e) { return true; }
 }
-function markLoginTime() { try { localStorage.setItem(LOGIN_AT_KEY, String(Date.now())); } catch (e) {} }
+function markLoginTime() { try { sessionStorage.setItem(LOGIN_AT_KEY, String(Date.now())); } catch (e) {} }
 // ตอนเปิด/รีเฟรชหน้า: ถ้าไม่ได้ใช้งานเกินเวลา ล้างการเข้าสู่ระบบ
 if (_idleExpired()) _clearLogin();
 // มีการใช้งาน → นับเวลาใหม่ (บันทึกไม่เกินทุก 15 วินาที)
@@ -5101,7 +5102,7 @@ function applyMode() {
 function authLogout() {
   isAdmin = false;
   sessionStorage.removeItem(SESSION_KEY);
-  try { localStorage.removeItem('door_view_ok'); } catch (e) {}
+  try { sessionStorage.removeItem('door_view_ok'); } catch (e) {}
   applyMode();
   goPage('overview', document.querySelector('.nav-item'));
 }
@@ -5497,13 +5498,13 @@ function _applyImportCode(raw, fromHash) {
    รหัสดูรายงาน (ถามรหัสตอนกดปุ่ม "📊 เข้าดูรายงาน" ที่หน้าแรก)
    วิธีเปลี่ยนรหัส: แก้ค่าในเครื่องหมาย ' ' ด้านล่าง แล้วอัปโหลดไฟล์ทับของเดิม
    เข้าได้ด้วย: รหัสดูรายงาน / รหัส Admin เท่านั้น (รหัสแผนกเข้าดูรายงานไม่ได้)
-   ใส่รหัสถูกแล้วจะจำไว้ — ถ้าเปิดจอทิ้งไว้ไม่ใช้งานเกิน 20 นาที ต้องใส่รหัสใหม่ (ดู LOGIN_TTL_MIN ด้านบนสุดของไฟล์)
+   ใส่รหัสถูกแล้วจะจำไว้เฉพาะแท็บนี้ — ปิดแล้วเปิดใหม่ หรือเปิดจอทิ้งไว้ไม่ใช้งานเกิน 20 นาที ต้องใส่รหัสใหม่ (ดู LOGIN_TTL_MIN ด้านบนสุดของไฟล์)
    เปลี่ยนรหัสเมื่อไหร่ ทุกเครื่องต้องใส่รหัสใหม่อีกครั้ง
 ══════════════════════════════════════════════════ */
 const VIEW_CODE = 'DR@@9654';
 const VIEW_OK_KEY = 'door_view_ok';
 function _viewOk() {
-  try { if (localStorage.getItem(VIEW_OK_KEY) === hashStr(VIEW_CODE)) return true; } catch (e) {}
+  try { if (sessionStorage.getItem(VIEW_OK_KEY) === hashStr(VIEW_CODE)) return true; } catch (e) {}
   return isAdmin;
 }
 // ปุ่ม "📊 เข้าดูรายงาน" — ถ้ายังไม่เคยใส่รหัสในเครื่องนี้ ให้ถามรหัสก่อน
@@ -5527,7 +5528,7 @@ function viewGateSubmit() {
     ok = true; isAdmin = true; sessionStorage.setItem(SESSION_KEY, '1'); applyMode();
   }
   if (ok) {
-    try { localStorage.setItem(VIEW_OK_KEY, hashStr(VIEW_CODE)); } catch (e) {}
+    try { sessionStorage.setItem(VIEW_OK_KEY, hashStr(VIEW_CODE)); } catch (e) {}
     markLoginTime();
     viewGateClose();
     enterDashboard();
