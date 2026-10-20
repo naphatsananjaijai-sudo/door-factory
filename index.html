@@ -1294,7 +1294,6 @@ html, body { max-width: 100%; overflow-x: hidden; }
     <div class="topbar-date-value" id="hdr-date-text">—</div>
   </div>
   <div class="topbar-spacer"></div>
-  <div class="view-only-badge">🔒 โหมดดูอย่างเดียว</div>
   <div class="date-input-wrap">
     <button type="button" class="date-nav-btn" onclick="shiftDay(-1)" title="วันก่อนหน้า">◀</button>
     <label for="date-input">📅</label>
@@ -1304,7 +1303,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   <button class="auth-btn refresh-btn" id="refresh-btn" onclick="hardReload(this)" title="โหลดข้อมูลเวอร์ชันล่าสุดจากเซิร์ฟเวอร์">🔄<span class="btn-label"> รีเฟรช</span></button>
   <button class="import-fab admin-only-nav" onclick="showImportModal()" title="นำเข้าข้อมูลจากฟอร์มเลื่อยเครื่องอื่น">📥<span class="btn-label"> นำเข้า</span></button>
   <button class="save-btn" onclick="saveData()">💾<span class="btn-label"> บันทึก</span></button>
-  <button class="auth-btn" id="auth-btn" onclick="authToggle()">🔒 เข้าสู่ระบบ</button>
+  <button class="auth-btn" id="auth-btn" onclick="authToggle()" style="display:none !important;">🔒 เข้าสู่ระบบ</button>
   <button class="auth-btn logout-btn" id="logout-btn" onclick="authLogout()" style="display:none;" title="ออกจากโหมดแก้ไข กลับไปโหมดดูอย่างเดียว">🚪<span class="btn-label"> ออกจากระบบ</span></button>
 </div>
 
@@ -4923,8 +4922,8 @@ function hashStr(s) {
   for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
   return (h >>> 0).toString(16);
 }
-// Hash of 'Factory@123'
-const ADMIN_HASH = hashStr('Factory@123');
+// รหัสแอดมิน (สิทธิ์ทุกอย่าง) — ใส่ได้ที่ช่องรหัส "📊 เข้าดูรายงาน" หรือช่องรหัสแผนก
+const ADMIN_HASH = hashStr('Factory@@123');
 const SESSION_KEY = 'door_admin_session';
 
 let isAdmin = false;
@@ -5041,6 +5040,16 @@ function deptAuthCloseModal() {
 function deptAuthSubmit() {
   const pw = document.getElementById('dept-auth-pw').value;
   const dept = DEPT_LIST.find(d => d.id === pendingDeptId);
+  // รหัสแอดมินใช้เข้าได้ทุกแผนก และได้สิทธิ์แอดมินเต็ม
+  if (dept && hashStr(pw) === ADMIN_HASH) {
+    isAdmin = true;
+    sessionStorage.setItem(SESSION_KEY, '1');
+    markLoginTime();
+    applyMode();
+    deptAuthCloseModal();
+    enterDept(dept.id);
+    return;
+  }
   if (dept && pw === dept.code) {
     markDeptUnlockedUI(dept.id);
     deptAuthCloseModal();
